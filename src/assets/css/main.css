@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-zinc-100 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background-image:
+      radial-gradient(800px 400px at 10% -10%, rgba(99, 102, 241, 0.14), transparent 60%),
+      radial-gradient(700px 400px at 90% -20%, rgba(14, 165, 233, 0.12), transparent 55%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-2xl border border-zinc-200/80 bg-white/75 shadow-sm shadow-zinc-900/5 backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/70 dark:shadow-black/20;
+  }
+
+  .soft-input {
+    @apply rounded-xl border border-zinc-300/80 bg-white/80 px-3 py-2 text-sm text-zinc-700 shadow-sm transition placeholder:text-zinc-400 focus:border-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-200/50 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-200 dark:placeholder:text-zinc-500 dark:focus:border-sky-500 dark:focus:ring-sky-900/40;
+  }
+
+  .soft-button {
+    @apply rounded-xl border border-zinc-300/80 bg-white/80 px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:-translate-y-px hover:bg-white hover:shadow-md active:translate-y-0 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-200 dark:hover:bg-zinc-900;
+  }
+
+  .accent-button {
+    @apply rounded-xl bg-gradient-to-r from-indigo-500 to-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:-translate-y-px hover:from-indigo-400 hover:to-sky-400 active:translate-y-0;
+  }
+}
