@@ -64,7 +64,7 @@
 - `ProjectTask` — задачи канбана.
 - `ProjectImage` — изображения галереи проекта.
 
-## 6) Фронтенд: что где и зачем
+## 6) Фронтенд: текущая структура (после декомпозиции)
 
 - `src/app.vue`  
   Корневой рендер `NuxtLayout + NuxtPage`.
@@ -76,12 +76,7 @@
   Главная: форма создания проекта (для разработчика) + список проектов.
 
 - `src/pages/projects/[id].vue`  
-  Страница проекта с вкладками:
-  - обзор и редактирование;
-  - галерея (загрузка/удаление + fullscreen preview);
-  - управление заказчиками;
-  - чат (SSE, разные пузырьки для своих/чужих);
-  - канбан (создание, перенос, удаление задач).
+  Тонкий orchestration-роут: собирает composables и рендерит `ProjectDetailsPage`.
 
 - `src/features/session-switcher/ui/SessionSwitcher.vue`  
   Вход, регистрация, выход, отображение текущей сессии.
@@ -92,17 +87,47 @@
 - `src/features/project-create/ui/ProjectCreateForm.vue`  
   Создание проекта (статус, public/private, hidden).
 
+- `src/features/project-chat`
+  - `model/useProjectChat.ts` — загрузка/отправка сообщений, lifecycle SSE (`subscribe/unsubscribe`).
+  - `ui/ProjectChatPanel.vue` — UI чата.
+
+- `src/features/project-tasks`
+  - `model/useProjectTasks.ts` — CRUD задач, вычисления для канбана и прав.
+  - `ui/ProjectKanbanBoard.vue` — UI доски.
+
+- `src/features/project-images`
+  - `model/useProjectImages.ts` — загрузка/удаление/preview/upload изображений.
+  - `ui/ProjectGallery.vue` — галерея.
+  - `ui/ImagePreviewOverlay.vue` — полноэкранный preview.
+
+- `src/features/project-members/ui/ProjectMembersManager.vue`
+  Управление назначенными/доступными заказчиками.
+
+- `src/features/project-edit/ui/ProjectEditForm.vue`
+  Отдельная форма редактирования проекта.
+
 - `src/widgets/project-list/ui/ProjectList.vue`  
   Фильтрация и вывод списка проектов.
 
 - `src/entities/project/ui/ProjectCard.vue`  
   Карточка проекта: статус, тип доступа, кнопка перехода.
 
+- `src/entities/project/model`
+  - `useProjectId.ts` — получение/валидация `projectId` из роута.
+  - `useProject.ts` — загрузка проекта, edit form, сохранение, архивирование.
+  - `useProjectMembers.ts` — загрузка пользователей, назначение/удаление участников.
+
+- `src/widgets/project-details/ui/ProjectDetailsPage.vue`
+  Компоновка вкладок проекта (overview/kanban/chat) из feature-компонентов.
+
 - `src/shared/api/client.ts`  
   Общий клиент запросов (`credentials: include`) + инициализация текущего пользователя.
 
 - `src/shared/types/domain.ts`  
   Единые TS-типы домена для фронта.
+
+- `src/shared/lib/date/formatMessageDate.ts`
+  Форматирование timestamp сообщений чата.
 
 - `src/assets/css/main.css`  
   Базовые глобальные стили, темы, стеклянные панели, кнопки/инпуты.
@@ -172,6 +197,7 @@
 
 ```bash
 npm install
+npm run prepare
 npm run prisma:generate
 npm run prisma:push
 npm run dev
