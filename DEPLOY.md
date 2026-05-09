@@ -30,6 +30,48 @@ docker compose up -d
 docker exec mysite-nginx nginx -s reload
 ```
 
+### Сайт не открывается по IP (ни `/`, ни `/dashboard/`)
+
+1. **Проверьте контейнеры и сеть `web`**
+
+```bash
+docker ps -a | grep -E 'mysite|gogol'
+docker network inspect web --format '{{range .Containers}}{{.Name}} {{end}}'
+```
+
+В списке сети должны быть как минимум: `mysite-nginx`, `mysite-app`, `gogol-dashboard`. Если чего-то нет — этот стек не подключён к `web` или контейнер упал.
+
+2. **Логи**
+
+```bash
+docker logs mysite-nginx --tail 80
+docker logs mysite-app --tail 80
+docker logs gogol-dashboard --tail 80
+```
+
+Сообщения вида `host not found in upstream` / `no resolver defined` — проблема имён или конфига nginx.
+
+3. **Доступность бэкендов из nginx**
+
+```bash
+docker exec mysite-nginx wget -qO- --timeout=3 http://mysite-app:3000/ 2>&1 | head
+docker exec mysite-nginx wget -qO- --timeout=3 http://gogol-dashboard:3000/dashboard/ 2>&1 | head
+```
+
+Первая команда — визитка, вторая — дашборд. Если первая падает, **главная страница** не откроется (nginx отдаст 502).
+
+4. **Upstream в nginx** — для визитки в конфиге указано **`mysite-app:3000`** (имя контейнера), не абстрактное `app`: на общей внешней сети имя сервиса `app` иногда не резолвится. После правки конфига: `docker exec mysite-nginx nginx -t && docker exec mysite-nginx nginx -s reload`.
+
+5. **Порт 80 с хоста**
+
+```bash
+curl -v --max-time 5 http://127.0.0.1/
+```
+
+На сервере должно ответить что-то от Nuxt (или редирект). Если «Connection refused» — порт не проброшен (`ports: "80:80"` у `mysite-nginx`) или фаервол режет входящие на 80.
+
+6. **Не смешивайте `https://IP`**, если в `default.conf` ещё закомментирован блок `listen 443 ssl` — тогда снаружи открывайте **`http://IP`**.
+
 ## Дашборд (этот проект)
 
 Создайте `.env` рядом с `docker-compose.yml`:
