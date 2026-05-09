@@ -13,6 +13,13 @@ import { prisma } from "./prisma";
 const AUTH_COOKIE = "auth_token";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 
+/** Путь cookie: при деплое под /dashboard/ — /dashboard, иначе / (см. NUXT_PUBLIC_APP_BASEURL). */
+const authCookiePath = (): string => {
+  const raw = process.env.NUXT_PUBLIC_APP_BASEURL || "/";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+};
+
 /** Пароль в БД: строка "salt:hash", salt и hash в hex; scrypt — встроенный KDF Node.js. */
 export const hashPassword = (password: string) => {
   const salt = randomBytes(16).toString("hex");
@@ -47,14 +54,14 @@ export const setAuthCookie = (event: H3Event, token: string) => {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/",
+    path: authCookiePath(),
     maxAge: 60 * 60 * 24 * 7
   });
 };
 
 export const clearAuthCookie = (event: H3Event) => {
   deleteCookie(event, AUTH_COOKIE, {
-    path: "/"
+    path: authCookiePath()
   });
 };
 

@@ -1,5 +1,5 @@
 import type { ChatMessage } from "~/shared/types";
-import { useApi } from "~/shared/api";
+import { useApi, withAppBase } from "~/shared/api";
 
 export const useProjectChat = (projectId: Ref<number>) => {
   const messages = ref<ChatMessage[]>([]);
@@ -27,7 +27,9 @@ export const useProjectChat = (projectId: Ref<number>) => {
 
   const subscribe = () => {
     if (source) return;
-    source = new EventSource(`/api/projects/${projectId.value}/chat/stream`, { withCredentials: true });
+    source = new EventSource(withAppBase(`/api/projects/${projectId.value}/chat/stream`), {
+      withCredentials: true
+    });
     source.addEventListener("messages", (event) => {
       const payload = JSON.parse((event as MessageEvent).data) as ChatMessage[];
       messages.value = payload;
