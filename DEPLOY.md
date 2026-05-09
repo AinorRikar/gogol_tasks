@@ -40,13 +40,15 @@ INTEGRATION_SECRET=другая-случайная-строка-общая-с-My
 CORS_ORIGIN=http://ВАШ_IP
 ```
 
-Сборка и запуск:
+Сборка и запуск (после `git pull` **обязательно** пересобрать образ, иначе контейнер останется на старом слое без схемы):
 
 ```bash
 cd /path/to/gogol_tasks
-docker compose build
-docker compose up -d
+docker compose build --no-cache
+docker compose up -d --force-recreate
 ```
+
+Быстрея вариант, если уверены в кэше: `docker compose up -d --build`. Если снова «schema not found» — только с `--no-cache`.
 
 При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
 
