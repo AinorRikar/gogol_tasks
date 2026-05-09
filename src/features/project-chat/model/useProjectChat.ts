@@ -1,5 +1,5 @@
-import type { ChatMessage } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import type { ChatMessage } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 export const useProjectChat = (projectId: Ref<number>) => {
   const messages = ref<ChatMessage[]>([]);

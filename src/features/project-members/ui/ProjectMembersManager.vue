@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectListItem, User } from "~/shared/types/domain";
+import type { ProjectListItem, User } from "~/shared/types";
 
 defineProps<{
   project: ProjectListItem;

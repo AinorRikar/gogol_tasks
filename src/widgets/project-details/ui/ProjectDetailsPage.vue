@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import type { ProjectImage, ProjectListItem, ProjectTask, TaskStatus, ChatMessage, User } from "~/shared/types/domain";
+import { ProjectEditForm, TechStackEditor } from "~/features/project-edit";
+import { ProjectChatPanel } from "~/features/project-chat";
+import { ProjectGallery, ImagePreviewOverlay } from "~/features/project-images";
+import { ProjectMembersManager } from "~/features/project-members";
+import { ProjectKanbanBoard } from "~/features/project-tasks";
+import type { ProjectImage, ProjectListItem, ProjectTask, TaskStatus, ChatMessage, User } from "~/shared/types";
+import { classesForTechTag } from "~/shared/lib";
 
 defineProps<{
   project: ProjectListItem;
@@ -19,6 +25,8 @@ defineProps<{
     status: ProjectListItem["status"];
     visibility: boolean;
     hidden: boolean;
+    useForPortfolio: boolean;
+    techStack: string;
   };
 
   availableClients: User[];
@@ -64,6 +72,15 @@ const emit = defineEmits<{
   "update:newMessage": [value: string];
   sendMessage: [];
 }>();
+
+const techStackTags = (csv: string) => csv.split(",").map((s) => s.trim()).filter(Boolean);
+
+const techStackEditorRef = ref<{ flushPending: () => void } | null>(null);
+
+const onSaveProject = () => {
+  techStackEditorRef.value?.flushPending();
+  emit("saveProject");
+};
 </script>
 
 <template>
@@ -135,23 +152,42 @@ const emit = defineEmits<{
           <div v-if="isDeveloper" class="flex gap-2">
             <button class="soft-button inline-flex items-center gap-1 py-1.5" @click="emit('toggleEdit')">
               <Icon name="material-symbols:edit-rounded" class="h-4 w-4" />
-              Редактировать
             </button>
             <button class="soft-button inline-flex items-center gap-1 py-1.5" @click="emit('openMembers')">
               <Icon name="material-symbols:groups-rounded" class="h-4 w-4" />
-              Заказчики
             </button>
             <button
               class="soft-button inline-flex items-center gap-1 border-amber-300/80 text-amber-700 dark:border-amber-800/80 dark:text-amber-400"
               @click="emit('archive')"
             >
               <Icon name="material-symbols:archive-rounded" class="h-4 w-4" />
-              Архивировать
             </button>
           </div>
         </div>
 
         <p class="mt-2 text-zinc-600 dark:text-zinc-300">{{ project.description || "Описание недоступно" }}</p>
+
+        <div class="mt-4">
+          <p class="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Стек</p>
+          <TechStackEditor
+            v-if="showEdit && isDeveloper"
+            ref="techStackEditorRef"
+            v-model="editForm.techStack"
+          />
+          <template v-else-if="techStackTags(project.techStack).length">
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(tag, idx) in techStackTags(project.techStack)"
+                :key="`${idx}-${tag}`"
+                class="inline-flex rounded-lg border px-2.5 py-1 text-sm font-medium"
+                :class="classesForTechTag(tag)"
+              >
+                {{ tag }}
+              </span>
+            </div>
+          </template>
+          <p v-else class="text-sm text-zinc-500 dark:text-zinc-400">Не указан</p>
+        </div>
 
         <ProjectGallery
           :images="images"
@@ -161,7 +197,7 @@ const emit = defineEmits<{
           @delete="emit('deleteImage', $event)"
         />
 
-        <ProjectEditForm v-if="showEdit" :edit-form="editForm" @save="emit('saveProject')" />
+        <ProjectEditForm v-if="showEdit" :edit-form="editForm" @save="onSaveProject" />
       </section>
 
       <section v-if="showUploadModal && isDeveloper && activeTab === 'overview'" class="glass-panel p-4">

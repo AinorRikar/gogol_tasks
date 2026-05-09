@@ -92,12 +92,16 @@ export default defineEventHandler(async () => {
     })
   ]);
 
+  const crmTechStack =
+    "Nuxt 4, Vue 3, TypeScript, Tailwind CSS, Prisma, SQLite, Zod, Nitro, Nuxt Icon, Nuxt Color Mode, JWT";
+
   const project = await prisma.project.create({
     data: {
       title: "CRM dashboard",
       description: "Публичный проект для демонстрации прогресса и аналитики.",
       status: ProjectStatus.ACTIVE,
       visibility: true,
+      techStack: crmTechStack,
       createdById: developer.id,
       members: {
         create: clients.map((client) => ({ userId: client.id }))

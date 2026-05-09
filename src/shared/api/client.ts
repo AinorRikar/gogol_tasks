@@ -1,4 +1,4 @@
-import type { User } from "~/shared/types/domain";
+import type { User } from "~/shared/types";
 
 export const useCurrentUser = () => useState<User | null>("current-user", () => null);
 

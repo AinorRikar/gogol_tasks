@@ -10,6 +10,8 @@ const updateProjectSchema = z.object({
   status: z.nativeEnum(ProjectStatus).optional(),
   visibility: z.boolean().optional(),
   hidden: z.boolean().optional(),
+  useForPortfolio: z.boolean().optional(),
+  techStack: z.string().max(4000).optional(),
   clientIds: z.array(z.number().int().positive()).optional()
 });
 
@@ -26,7 +28,9 @@ export default defineEventHandler(async (event) => {
       description: payload.description,
       status: payload.status,
       visibility: payload.visibility,
-      hidden: payload.hidden
+      hidden: payload.hidden,
+      useForPortfolio: payload.useForPortfolio,
+      techStack: payload.techStack
     }
   });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectListItem } from "~/shared/types/domain";
+import type { ProjectListItem } from "~/shared/types";
 
 defineProps<{ project: ProjectListItem }>();
 
@@ -19,17 +19,26 @@ const statusLabels: Record<ProjectListItem["status"], string> = {
         <h3 class="text-base font-semibold">{{ project.title }}</h3>
         <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ statusLabels[project.status] }}</p>
       </div>
-      <span
-        class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
-        :class="
-          project.visibility
-            ? 'border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400'
-            : 'border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400'
-        "
-      >
-        <Icon :name="project.visibility ? 'material-symbols:language' : 'material-symbols:lock'" class="h-4 w-4" />
-        {{ project.visibility ? "Public" : "Private" }}
-      </span>
+      <div class="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
+        <span
+          v-if="project.useForPortfolio"
+          class="inline-flex items-center gap-1 rounded-full border border-violet-300 px-2.5 py-1 text-xs font-medium text-violet-700 dark:border-violet-600 dark:text-violet-300"
+        >
+          <Icon name="material-symbols:cases-rounded" class="h-4 w-4" />
+          В портфолио
+        </span>
+        <span
+          class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
+          :class="
+            project.visibility
+              ? 'border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400'
+              : 'border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400'
+          "
+        >
+          <Icon :name="project.visibility ? 'material-symbols:language' : 'material-symbols:lock'" class="h-4 w-4" />
+          {{ project.visibility ? "Публичный" : "Приватный" }}
+        </span>
+      </div>
     </div>
     <p v-if="project.archivedAt" class="mb-2 text-xs text-amber-600 dark:text-amber-400">Архивирован</p>
     <p class="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">

@@ -9,7 +9,9 @@ const createProjectSchema = z.object({
   description: z.string().min(10),
   status: z.nativeEnum(ProjectStatus),
   visibility: z.boolean(),
-  hidden: z.boolean().default(false)
+  hidden: z.boolean().default(false),
+  useForPortfolio: z.boolean().default(false),
+  techStack: z.string().max(4000).default("")
 });
 
 export default defineEventHandler(async (event) => {
@@ -24,6 +26,8 @@ export default defineEventHandler(async (event) => {
       status: payload.status,
       visibility: payload.visibility,
       hidden: payload.hidden,
+      useForPortfolio: payload.useForPortfolio,
+      techStack: payload.techStack,
       createdById: currentUser.id
     }
   });

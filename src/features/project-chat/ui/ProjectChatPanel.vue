@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ChatMessage } from "~/shared/types/domain";
-import { formatMessageDate } from "~/shared/lib/date/formatMessageDate";
+import type { ChatMessage } from "~/shared/types";
+import { formatMessageDate } from "~/shared/lib";
 
 defineProps<{
   messages: ChatMessage[];

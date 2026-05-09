@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectTask, TaskStatus } from "~/shared/types/domain";
+import type { ProjectTask, TaskStatus } from "~/shared/types";
 
 defineProps<{
   canCreateTask: boolean;

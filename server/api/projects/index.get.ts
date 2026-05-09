@@ -9,12 +9,14 @@ export default defineEventHandler(async (event) => {
   const requestedStatus = query.status as ProjectStatus | undefined;
   const requestedVisibility = query.visibility as "PUBLIC" | "PRIVATE" | undefined;
   const includeArchived = query.includeArchived === "true";
+  const portfolioOnly = query.portfolioOnly === "true";
 
   const projects = await prisma.project.findMany({
     where: {
       ...(includeArchived ? {} : { archivedAt: null }),
       ...(requestedStatus ? { status: requestedStatus } : {}),
-      ...(requestedVisibility ? { visibility: requestedVisibility === "PUBLIC" } : {})
+      ...(requestedVisibility ? { visibility: requestedVisibility === "PUBLIC" } : {}),
+      ...(portfolioOnly ? { useForPortfolio: true } : {})
     },
     include: {
       members: { include: { user: true } }
@@ -41,6 +43,8 @@ export default defineEventHandler(async (event) => {
       status: project.status,
       visibility: project.visibility,
       hidden: project.hidden,
+      useForPortfolio: project.useForPortfolio,
+      techStack: isHiddenForViewer ? "" : canReadDescription ? project.techStack : "",
       canOpen,
       archivedAt: project.archivedAt,
       isAssigned,

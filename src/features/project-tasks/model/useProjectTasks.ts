@@ -1,5 +1,5 @@
-import type { ProjectListItem, ProjectTask, TaskStatus, User } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import type { ProjectListItem, ProjectTask, TaskStatus, User } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 export const useProjectTasks = (
   projectId: Ref<number>,

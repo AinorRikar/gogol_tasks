@@ -29,6 +29,8 @@ export default defineEventHandler(async (event) => {
     status: project.status,
     visibility: project.visibility,
     hidden: project.hidden,
+    useForPortfolio: project.useForPortfolio,
+    techStack: isHiddenForViewer ? "" : canReadDescription ? project.techStack : "",
     canOpen: true,
     archivedAt: project.archivedAt,
     isAssigned,

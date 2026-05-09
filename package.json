@@ -6,7 +6,8 @@
     "dev": "nuxt dev",
     "build": "nuxt build",
     "preview": "nuxt preview",
-    "prepare": "nuxt prepare",
+    "prepare": "prisma generate && nuxt prepare",
+    "fsd:check": "node ./scripts/fsd/check-public-api.mjs",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio"

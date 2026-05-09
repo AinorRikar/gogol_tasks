@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectImage } from "~/shared/types/domain";
+import type { ProjectImage } from "~/shared/types";
 
 defineProps<{
   openedImage: ProjectImage | null;

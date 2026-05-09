@@ -15,6 +15,9 @@ export interface ProjectListItem {
   status: ProjectStatus;
   visibility: boolean;
   hidden: boolean;
+  useForPortfolio: boolean;
+  /** Технологии, перечисленные через запятую (как в БД). */
+  techStack: string;
   canOpen: boolean;
   archivedAt?: string | null;
   isAssigned: boolean;

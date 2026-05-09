@@ -1,5 +1,5 @@
-import type { ProjectImage } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import type { ProjectImage } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 export const useProjectImages = (projectId: Ref<number>) => {
   const images = ref<ProjectImage[]>([]);

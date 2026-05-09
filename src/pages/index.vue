@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useCurrentUser } from "~/shared/api/client";
+import { ProjectCreateForm } from "~/features/project-create";
+import { ProjectList } from "~/widgets/project-list";
+import { useCurrentUser } from "~/shared/api";
 
 const currentUser = useCurrentUser();
 

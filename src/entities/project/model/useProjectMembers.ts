@@ -1,5 +1,5 @@
-import type { ProjectListItem, User } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import type { ProjectListItem, User } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 export const useProjectMembers = (projectId: Ref<number>, project: Ref<ProjectListItem | null>) => {
   const users = ref<User[]>([]);

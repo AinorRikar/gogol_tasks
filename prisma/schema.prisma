@@ -46,9 +46,11 @@ model Project {
   title       String
   description String
   status      ProjectStatus
-  visibility  Boolean         @default(true)
-  hidden      Boolean         @default(false)
-  archivedAt  DateTime?
+  visibility      Boolean         @default(true)
+  hidden          Boolean         @default(false)
+  useForPortfolio Boolean         @default(false)
+  techStack       String          @default("")
+  archivedAt      DateTime?
   members     ProjectMember[]
   messages    ChatMessage[]
   tasks       ProjectTask[]

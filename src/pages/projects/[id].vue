@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { useCurrentUser } from "~/shared/api/client";
-import { useProjectId } from "~/entities/project/model/useProjectId";
-import { useProject } from "~/entities/project/model/useProject";
-import { useProjectMembers } from "~/entities/project/model/useProjectMembers";
-import { useProjectChat } from "~/features/project-chat/model/useProjectChat";
-import { useProjectTasks } from "~/features/project-tasks/model/useProjectTasks";
-import { useProjectImages } from "~/features/project-images/model/useProjectImages";
+import { useProject, useProjectId, useProjectMembers } from "~/entities/project";
+import { useProjectChat } from "~/features/project-chat";
+import { useProjectImages } from "~/features/project-images";
+import { useProjectTasks } from "~/features/project-tasks";
+import { ProjectDetailsPage } from "~/widgets/project-details";
+import { useCurrentUser } from "~/shared/api";
 
 const currentUser = useCurrentUser();
 const projectId = useProjectId();

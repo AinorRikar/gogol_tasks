@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { User, UserRole } from "~/shared/types/domain";
-import { useApi, useCurrentUser } from "~/shared/api/client";
+import type { User, UserRole } from "~/shared/types";
+import { useApi, useCurrentUser } from "~/shared/api";
 
 const currentUser = useCurrentUser();
 const mode = ref<"login" | "register">("login");
@@ -60,6 +60,15 @@ const logout = async () => {
         <Icon name="material-symbols:account-circle-rounded" class="h-4 w-4" />
         {{ currentUser.name }} ({{ currentUser.role }})
       </span>
+      <NuxtLink
+        to="/cabinet"
+        class="soft-button inline-flex items-center gap-1 py-1"
+        title="Личный кабинет"
+        aria-label="Личный кабинет"
+      >
+        <Icon name="material-symbols:manage-accounts-rounded" class="h-4 w-4" aria-hidden="true" />
+        <span class="sr-only">Личный кабинет</span>
+      </NuxtLink>
       <button class="soft-button inline-flex items-center gap-1 py-1" @click="logout">
         <Icon name="material-symbols:logout-rounded" class="h-4 w-4" />
         Выйти

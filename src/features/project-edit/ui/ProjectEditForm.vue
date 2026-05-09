@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectListItem } from "~/shared/types/domain";
+import type { ProjectListItem } from "~/shared/types";
 
 defineProps<{
   editForm: {
@@ -8,6 +8,7 @@ defineProps<{
     status: ProjectListItem["status"];
     visibility: boolean;
     hidden: boolean;
+    useForPortfolio: boolean;
   };
 }>();
 
@@ -35,6 +36,10 @@ const emit = defineEmits<{
       <label class="glass-panel flex items-center gap-2 px-3 py-2 text-sm">
         <input v-model="editForm.hidden" type="checkbox" />
         Hidden
+      </label>
+      <label class="glass-panel flex items-center gap-2 px-3 py-2 text-sm">
+        <input v-model="editForm.useForPortfolio" type="checkbox" />
+        Использовать для портфолио
       </label>
     </div>
     <button class="accent-button inline-flex w-fit items-center gap-1">

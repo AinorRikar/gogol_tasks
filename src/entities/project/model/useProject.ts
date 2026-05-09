@@ -1,5 +1,5 @@
-import type { ProjectListItem } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import type { ProjectListItem } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 export const useProject = (projectId: Ref<number>) => {
   const project = ref<ProjectListItem | null>(null);
@@ -11,7 +11,9 @@ export const useProject = (projectId: Ref<number>) => {
     description: "",
     status: "PLANNING" as ProjectListItem["status"],
     visibility: true,
-    hidden: false
+    hidden: false,
+    useForPortfolio: false,
+    techStack: ""
   });
 
   const hydrateEditForm = (value: ProjectListItem) => {
@@ -20,6 +22,8 @@ export const useProject = (projectId: Ref<number>) => {
     editForm.status = value.status;
     editForm.visibility = value.visibility;
     editForm.hidden = value.hidden;
+    editForm.useForPortfolio = value.useForPortfolio;
+    editForm.techStack = value.techStack ?? "";
   };
 
   const loadProject = async () => {

@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import type { ProjectStatus } from "~/shared/types/domain";
-import { useApi } from "~/shared/api/client";
+import { TechStackEditor } from "~/features/project-edit";
+import type { ProjectStatus } from "~/shared/types";
+import { useApi } from "~/shared/api";
 
 const emit = defineEmits<{ created: [] }>();
+
+const techStackEditorRef = ref<{ flushPending: () => void } | null>(null);
 
 const form = reactive({
   title: "",
   description: "",
   status: "PLANNING" as ProjectStatus,
   visibility: true,
-  hidden: false
+  hidden: false,
+  useForPortfolio: false,
+  techStack: ""
 });
 
 const submit = async () => {
+  techStackEditorRef.value?.flushPending();
   await useApi("/api/projects", {
     method: "POST",
     body: form
@@ -22,6 +28,8 @@ const submit = async () => {
   form.status = "PLANNING";
   form.visibility = true;
   form.hidden = false;
+  form.useForPortfolio = false;
+  form.techStack = "";
   emit("created");
 };
 </script>
@@ -60,7 +68,12 @@ const submit = async () => {
         <input v-model="form.hidden" type="checkbox" />
         Hidden
       </label>
+      <label class="glass-panel flex items-center gap-2 px-3 py-2 text-sm">
+        <input v-model="form.useForPortfolio" type="checkbox" />
+        Использовать для портфолио
+      </label>
     </div>
+    <TechStackEditor ref="techStackEditorRef" v-model="form.techStack" />
     <p class="text-xs text-zinc-500">Заказчики назначаются позже в окне управления участниками проекта.</p>
     <button class="accent-button inline-flex w-fit items-center gap-1">
       <Icon name="material-symbols:check-circle-rounded" class="h-4 w-4" />
