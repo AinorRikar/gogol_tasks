@@ -6,8 +6,9 @@ WORKDIR /app
 RUN apk add --no-cache libc6-compat openssl
 
 COPY package*.json ./
-# Явно без production-only: нужен пакет prisma для generate (теперь он в dependencies).
-RUN npm ci
+# --ignore-scripts: иначе npm ci запускает prepare («prisma generate && nuxt prepare») до COPY . .
+# и падает на шаге 5/9 с «Could not find Prisma Schema».
+RUN npm ci --ignore-scripts
 
 # Один слой исходников — prisma/schema.prisma обязан попасть в контекст (см. .dockerignore).
 COPY . .
@@ -18,6 +19,8 @@ ENV NUXT_PUBLIC_APP_BASEURL=$NUXT_PUBLIC_APP_BASEURL
 
 ENV DATABASE_URL="file:./build-placeholder.db"
 RUN ./node_modules/.bin/prisma generate --schema=prisma/schema.prisma
+# То, что в package.json в prepare после prisma (нужно для nuxt build)
+RUN npx nuxt prepare
 RUN npm run build
 
 FROM node:22-alpine AS runner

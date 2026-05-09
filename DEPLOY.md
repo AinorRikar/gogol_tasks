@@ -52,15 +52,17 @@ docker compose up -d --force-recreate
 
 При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
 
-### Ошибка «Could not find Prisma Schema»
+### Ошибка «Could not find Prisma Schema» (часто на шаге **5/9** `RUN npm ci`)
 
-Обычно это значит одно из трёх:
+Причина: в `package.json` скрипт **`prepare`** вызывает `prisma generate` сразу после установки пакетов, а в Dockerfile **`COPY . .` идёт только после `npm ci`**, поэтому файла `prisma/schema.prisma` ещё нет.
 
-1. **Сборка не из корня репозитория** — `docker compose build` нужно запускать из каталога, где лежат `Dockerfile`, `prisma/schema.prisma` и `package.json`. Проверка: `ls prisma/schema.prisma`.
-2. **В `.dockerignore` случайно игнорируется вся папка `prisma`** — в репозитории игнорируются только `*.db` в `prisma/`, не сам `schema.prisma`. Если правили ignore на сервере — уберите строку, которая отрезает `prisma`.
-3. **Запускали `prisma` на хосте** не из каталога проекта — для продакшена схема должна быть в образе; пересоберите: `docker compose build --no-cache && docker compose up -d`.
+В Dockerfile используется **`npm ci --ignore-scripts`**, затем после копирования исходников вручную выполняются `prisma generate` и `nuxt prepare`.
 
-В образе при сборке проверяется наличие `/app/prisma/schema.prisma` и CLI в `node_modules/.bin/prisma`; если сборка падает на этом шаге — в контекст сборки не попала схема.
+Другие причины той же формулировки ошибки:
+
+1. **Сборка не из корня репозитория** — проверка: `ls prisma/schema.prisma`.
+2. **`.dockerignore` отрезает `prisma`** — в репозитории игнорируются только `prisma/*.db`.
+3. **Старый образ без пересборки** — `docker compose build --no-cache`.
 
 ## Обновление без остановки «всего Docker»
 
