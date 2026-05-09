@@ -50,6 +50,16 @@ docker compose up -d
 
 При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
 
+### Ошибка «Could not find Prisma Schema»
+
+Обычно это значит одно из трёх:
+
+1. **Сборка не из корня репозитория** — `docker compose build` нужно запускать из каталога, где лежат `Dockerfile`, `prisma/schema.prisma` и `package.json`. Проверка: `ls prisma/schema.prisma`.
+2. **В `.dockerignore` случайно игнорируется вся папка `prisma`** — в репозитории игнорируются только `*.db` в `prisma/`, не сам `schema.prisma`. Если правили ignore на сервере — уберите строку, которая отрезает `prisma`.
+3. **Запускали `prisma` на хосте** не из каталога проекта — для продакшена схема должна быть в образе; пересоберите: `docker compose build --no-cache && docker compose up -d`.
+
+В образе при сборке проверяется наличие `/app/prisma/schema.prisma` и CLI в `node_modules/.bin/prisma`; если сборка падает на этом шаге — в контекст сборки не попала схема.
+
 ## Обновление без остановки «всего Docker»
 
 - Обновляете **только MySite**: `cd MySite && docker compose build app && docker compose up -d app` — nginx и дашборд продолжают работать.
