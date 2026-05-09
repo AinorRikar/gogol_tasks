@@ -1,3 +1,8 @@
+/**
+ * GET /api/users
+ * Список пользователей (id, name, email, role) для UI без чувствительных полей.
+ * В коде нет проверки роли — при необходимости ограничьте через getCurrentUser + assertDeveloper.
+ */
 import { prisma } from "../../utils/prisma";
 
 export default defineEventHandler(async () => {

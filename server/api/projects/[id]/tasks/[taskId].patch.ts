@@ -1,3 +1,7 @@
+/**
+ * PATCH /api/projects/:id/tasks/:taskId
+ * Частичное обновление задачи (title, description null, assigneeId, status, order). Проверка принадлежности к projectId.
+ */
 import { TaskStatus } from "@prisma/client";
 import { createError, getRouterParam, readBody } from "h3";
 import { z } from "zod";

@@ -1,3 +1,7 @@
+/**
+ * Клиент API с cookie-сессией: все $fetch с credentials: "include", чтобы JWT из httpOnly-cookie
+ * уходил на Nitro. useState("current-user") — один источник правды для текущего пользователя (SSR + клиент).
+ */
 import type { User } from "~/shared/types";
 
 export const useCurrentUser = () => useState<User | null>("current-user", () => null);

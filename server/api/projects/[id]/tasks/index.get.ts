@@ -1,3 +1,7 @@
+/**
+ * GET /api/projects/:id/tasks
+ * Участник проекта или создатель: список ProjectTask с кратким assignee, сортировка status → order → createdAt.
+ */
 import { createError, getRouterParam } from "h3";
 import { getCurrentUser } from "../../../../utils/auth";
 import { getProjectWithMembers } from "../../../../utils/project";

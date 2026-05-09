@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects/:id/tasks
+ * Участник или создатель. Тело: title, description?, status. order = max по статусу + 1 (канбан внутри колонки).
+ */
 import { TaskStatus } from "@prisma/client";
 import { createError, getRouterParam, readBody } from "h3";
 import { z } from "zod";

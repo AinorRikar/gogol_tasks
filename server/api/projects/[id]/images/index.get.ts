@@ -1,3 +1,8 @@
+/**
+ * GET /api/projects/:id/images
+ * Гость допустим (getCurrentUserOptional). Доступ как у карточки: приватность, hidden (только DEVELOPER/участник видят скрытый проект).
+ * Ответ: ProjectImage[] с uploadedBy.
+ */
 import { createError, getRouterParam } from "h3";
 import { getCurrentUserOptional } from "../../../../utils/auth";
 import { canAccessProject, getProjectWithMembers } from "../../../../utils/project";

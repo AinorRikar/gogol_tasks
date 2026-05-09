@@ -1,3 +1,7 @@
+/**
+ * GET /api/auth/me
+ * Только с валидной cookie: текущий пользователь для гидратации фронта (useInitActiveUser).
+ */
 import { getCurrentUser } from "../../utils/auth";
 
 export default defineEventHandler(async (event) => {

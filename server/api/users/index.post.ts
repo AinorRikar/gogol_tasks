@@ -1,3 +1,7 @@
+/**
+ * POST /api/users
+ * Только DEVELOPER: создаёт пользователя с паролем (например для админ-сценариев).
+ */
 import { UserRole } from "@prisma/client";
 import { readBody } from "h3";
 import { z } from "zod";

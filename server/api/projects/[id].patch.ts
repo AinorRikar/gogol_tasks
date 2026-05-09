@@ -1,3 +1,8 @@
+/**
+ * PATCH /api/projects/:id
+ * Только DEVELOPER. Частичное обновление полей проекта через Prisma (undefined поля не трогаются в объекте data — передаются как есть из zod).
+ * Если передан clientIds: полная пересборка ProjectMember (deleteMany + createMany) — проще, чем diff.
+ */
 import { ProjectStatus } from "@prisma/client";
 import { getRouterParam, readBody } from "h3";
 import { z } from "zod";

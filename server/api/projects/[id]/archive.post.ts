@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects/:id/archive
+ * Только DEVELOPER. Prisma: archivedAt = now() (мягкое архивирование, строка остаётся в БД).
+ */
 import { getRouterParam } from "h3";
 import { assertDeveloper, getCurrentUser } from "../../../utils/auth";
 import { prisma } from "../../../utils/prisma";

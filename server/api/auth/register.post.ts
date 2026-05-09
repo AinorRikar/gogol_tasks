@@ -1,3 +1,7 @@
+/**
+ * POST /api/auth/register
+ * Создание User в Prisma, хэш пароля, сразу логин (cookie). Конфликт email → 409 (P2002).
+ */
 import { Prisma } from "@prisma/client";
 import { createError, readBody } from "h3";
 import { z } from "zod";

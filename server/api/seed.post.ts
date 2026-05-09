@@ -1,3 +1,8 @@
+/**
+ * POST /api/seed
+ * Демо-наполнение SQLite при пустой БД (пользователи, проекты, сообщения, задачи).
+ * Если пользователи уже есть — обновляет пароли/роли заданной учётке и выходит без повторного сида.
+ */
 import { ProjectStatus, UserRole } from "@prisma/client";
 import { prisma } from "../utils/prisma";
 import { hashPassword } from "../utils/auth";

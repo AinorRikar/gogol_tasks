@@ -1,3 +1,7 @@
+/**
+ * DELETE /api/projects/:id/images/:imageId
+ * Только DEVELOPER-владелец. Удаление строки в БД и попытка unlink файла (ошибка диска игнорируется для идемпотентности).
+ */
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { UserRole } from "@prisma/client";

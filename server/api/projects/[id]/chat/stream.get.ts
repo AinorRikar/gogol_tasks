@@ -1,3 +1,9 @@
+/**
+ * GET /api/projects/:id/chat/stream (SSE)
+ * Те же права, что и на чат. Заголовки text/event-stream, no-cache, keep-alive.
+ * Каждые 2 с шлётся event: messages с последними 100 сообщениями (простой polling через setInterval, без in-memory pub/sub).
+ * Соединение держится до закрытия клиента (req close → clearInterval, res.end).
+ */
 import { createError, getRouterParam, setHeader } from "h3";
 import { UserRole } from "@prisma/client";
 import { getCurrentUser } from "../../../../utils/auth";

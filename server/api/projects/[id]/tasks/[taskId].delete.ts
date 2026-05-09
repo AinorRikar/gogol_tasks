@@ -1,3 +1,7 @@
+/**
+ * DELETE /api/projects/:id/tasks/:taskId
+ * Участник/создатель, затем prisma.projectTask.delete при совпадении projectId.
+ */
 import { createError, getRouterParam } from "h3";
 import { getCurrentUser } from "../../../../utils/auth";
 import { getProjectWithMembers } from "../../../../utils/project";

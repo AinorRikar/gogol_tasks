@@ -1,3 +1,13 @@
+// =============================================================================
+// Схема данных Prisma для приложения (ORM-слой над SQLite).
+//
+// generator — какой клиент генерировать (`prisma generate` → пакет @prisma/client).
+// datasource — подключение к БД: строка DATABASE_URL из .env (у нас file:./dev.db и т.п.).
+//
+// После правок этого файла: `npx prisma generate` (обновить типы/клиент) и
+// `npx prisma db push` (применить изменения к SQLite без отдельных миграций).
+// =============================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,11 +17,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Роль в продукте: разработчик (полный доступ к проектам) или заказчик (ограничения в API).
 enum UserRole {
   DEVELOPER
   CLIENT
 }
 
+// Жизненный цикл проекта в CRM (фильтры списка, формы редактирования).
 enum ProjectStatus {
   ACTIVE
   COMPLETED
@@ -20,12 +32,14 @@ enum ProjectStatus {
   PLANNING
 }
 
+// Колонки канбана задач.
 enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
 }
 
+// Пользователь: логин по email, пароль только в виде hash (см. server/utils/auth.ts).
 model User {
   id              Int             @id @default(autoincrement())
   name            String
@@ -41,6 +55,10 @@ model User {
   updatedAt       DateTime        @updatedAt
 }
 
+// Проект: visibility = виден ли в «публичном» списке без членства;
+// hidden = «скрытый» контент для посторонних (маскировка title/description в API);
+// archivedAt != null → проект в архиве;
+// useForPortfolio / techStack — метаданные для портфеля и стека (techStack хранится строкой через запятую).
 model Project {
   id          Int             @id @default(autoincrement())
   title       String
@@ -61,6 +79,7 @@ model Project {
   updatedAt   DateTime        @updatedAt
 }
 
+// Связь заказчик ↔ проект (многие-ко-многим через таблицу). Удаление проекта каскадом удаляет строки участников.
 model ProjectMember {
   id        Int      @id @default(autoincrement())
   projectId Int
@@ -72,6 +91,7 @@ model ProjectMember {
   @@unique([projectId, userId])
 }
 
+// Сообщения чата проекта. sentAt — опциональное «время отправки» для отображения.
 model ChatMessage {
   id        Int      @id @default(autoincrement())
   projectId Int
@@ -83,6 +103,7 @@ model ChatMessage {
   createdAt DateTime @default(now())
 }
 
+// Задача канбана. При удалении назначенного пользователя assigneeId обнуляется (SetNull), проект при удалении — каскадом удаляет задачи.
 model ProjectTask {
   id          Int        @id @default(autoincrement())
   projectId   Int
@@ -97,6 +118,7 @@ model ProjectTask {
   updatedAt   DateTime   @updatedAt
 }
 
+// Файл изображения в галерее проекта (URL и метаданные после загрузки через API).
 model ProjectImage {
   id           Int      @id @default(autoincrement())
   projectId    Int

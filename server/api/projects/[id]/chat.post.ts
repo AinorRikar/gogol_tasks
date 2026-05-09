@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects/:id/chat
+ * Тело: text. Писать могут только назначенный CLIENT или владелец DEVELOPER; Prisma chatMessage.create + sentAt.
+ */
 import { createError, readBody, getRouterParam } from "h3";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";

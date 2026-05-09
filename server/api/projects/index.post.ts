@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects
+ * Только DEVELOPER. Тело: поля нового Project + techStack CSV. Prisma project.create, createdById = текущий пользователь.
+ */
 import { ProjectStatus } from "@prisma/client";
 import { readBody } from "h3";
 import { z } from "zod";

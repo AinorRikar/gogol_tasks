@@ -1,3 +1,9 @@
+/**
+ * GET /api/projects
+ * Доступ: гость или пользователь (cookie опциональна). Query: status, visibility, includeArchived, portfolioOnly.
+ * Prisma: findMany с фильтрами; для каждой строки маскируются title/description/techStack если проект hidden и зритель не разработчик/не участник.
+ * canOpen / canReadDescription задают, что увидит клиент в списке карточек.
+ */
 import { ProjectStatus } from "@prisma/client";
 import { getQuery } from "h3";
 import { getCurrentUserOptional } from "../../utils/auth";

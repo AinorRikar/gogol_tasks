@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects/:id/members
+ * Только DEVELOPER. Тело: userId. Добавляет только пользователей с ролью CLIENT (upsert по составному ключу projectId_userId).
+ */
 import { UserRole } from "@prisma/client";
 import { createError, getRouterParam, readBody } from "h3";
 import { z } from "zod";

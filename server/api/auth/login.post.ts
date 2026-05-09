@@ -1,3 +1,8 @@
+/**
+ * POST /api/auth/login
+ * Тело: email, password. Проверка пароля по hash в БД, выдача JWT в httpOnly-cookie.
+ * Ответ: публичные поля пользователя (без passwordHash).
+ */
 import { createError, readBody } from "h3";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";

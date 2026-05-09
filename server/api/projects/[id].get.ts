@@ -1,3 +1,8 @@
+/**
+ * GET /api/projects/:id
+ * Карточка проекта: сначала загрузка с участниками, затем цепочка прав (приватность, hidden, маскировка полей).
+ * 403 если приватный проект и пользователь не в списке доступа.
+ */
 import { createError, getRouterParam } from "h3";
 import { getCurrentUserOptional } from "../../utils/auth";
 import { canAccessProject, getProjectWithMembers } from "../../utils/project";

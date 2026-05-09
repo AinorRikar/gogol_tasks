@@ -1,3 +1,7 @@
+/**
+ * POST /api/projects/:id/images
+ * Multipart поле file. Только DEVELOPER-владелец проекта. Файл в public/uploads/projects/, запись в Prisma с fileUrl относительным.
+ */
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";

@@ -1,3 +1,7 @@
+/**
+ * GET /api/projects/:id/chat
+ * Участник проекта (CLIENT в members) или владелец-DEVELOPER: история ChatMessage с автором, по возрастанию времени.
+ */
 import { createError, getRouterParam } from "h3";
 import { UserRole } from "@prisma/client";
 import { getCurrentUser } from "../../../utils/auth";
