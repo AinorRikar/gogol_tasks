@@ -17,13 +17,28 @@ export const useCurrentUser = () => useState<User | null>("current-user", () => 
 
 export const useInitActiveUser = async () => {
   const currentUser = useCurrentUser();
-  if (currentUser.value) return;
-  try {
-    currentUser.value = await $fetch<User>(withAppBase("/api/auth/me"), {
-      credentials: "include"
-    });
-  } catch {
-    currentUser.value = null;
+  const mePath = withAppBase("/api/auth/me");
+
+  const fetchMe = async (): Promise<User | null> => {
+    try {
+      if (import.meta.server) {
+        // При SSR обычный $fetch не передаёт Cookie браузера — сессия пропадала после F5.
+        const requestFetch = useRequestFetch();
+        return await requestFetch<User>(mePath);
+      }
+      return await $fetch<User>(mePath, { credentials: "include" });
+    } catch {
+      return null;
+    }
+  };
+
+  if (import.meta.client) {
+    currentUser.value = await fetchMe();
+    return;
+  }
+
+  if (!currentUser.value) {
+    currentUser.value = await fetchMe();
   }
 };
 

@@ -7,17 +7,31 @@
 import { scryptSync, timingSafeEqual, randomBytes } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { UserRole, type User } from "@prisma/client";
-import { createError, getCookie, setCookie, deleteCookie, type H3Event } from "h3";
+import { createError, getCookie, getHeader, setCookie, deleteCookie, type H3Event } from "h3";
 import { prisma } from "./prisma";
 
 const AUTH_COOKIE = "auth_token";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 
-/** Путь cookie: при деплое под /dashboard/ — /dashboard, иначе / (см. NUXT_PUBLIC_APP_BASEURL). */
-const authCookiePath = (): string => {
-  const raw = process.env.NUXT_PUBLIC_APP_BASEURL || "/";
-  const trimmed = raw.replace(/\/+$/, "");
-  return trimmed === "" ? "/" : trimmed;
+/**
+ * Путь cookie: всегда «/» на одном хосте с MySite (и /, и /dashboard/api/…).
+ * Path=/dashboard иногда не уходит в запросах после F5 на мобильных/других браузерах.
+ */
+const authCookiePath = () => "/";
+
+const authCookieOptions = (event: H3Event) => {
+  const secure =
+    process.env.NODE_ENV === "production" &&
+    (getHeader(event, "x-forwarded-proto")?.split(",")[0]?.trim() === "https" ||
+      !getHeader(event, "x-forwarded-proto"));
+
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure,
+    path: authCookiePath(),
+    maxAge: 60 * 60 * 24 * 7
+  };
 };
 
 /** Пароль в БД: строка "salt:hash", salt и hash в hex; scrypt — встроенный KDF Node.js. */
@@ -50,18 +64,15 @@ export const signAuth = (userId: number) =>
  * secure в production — только по HTTPS.
  */
 export const setAuthCookie = (event: H3Event, token: string) => {
-  setCookie(event, AUTH_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: authCookiePath(),
-    maxAge: 60 * 60 * 24 * 7
-  });
+  setCookie(event, AUTH_COOKIE, token, authCookieOptions(event));
 };
 
 export const clearAuthCookie = (event: H3Event) => {
+  const opts = authCookieOptions(event);
   deleteCookie(event, AUTH_COOKIE, {
-    path: authCookiePath()
+    path: opts.path,
+    secure: opts.secure,
+    sameSite: opts.sameSite
   });
 };
 
