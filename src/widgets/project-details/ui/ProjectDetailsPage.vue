@@ -4,7 +4,8 @@ import { ProjectChatPanel } from "~/features/project-chat";
 import { ProjectGallery, ImagePreviewOverlay } from "~/features/project-images";
 import { ProjectMembersManager } from "~/features/project-members";
 import { ProjectKanbanBoard } from "~/features/project-tasks";
-import type { ProjectImage, ProjectListItem, ProjectTask, TaskStatus, ChatMessage, User } from "~/shared/types";
+import { ProjectLinksBar, ProjectLinksManager } from "~/features/project-links";
+import type { ProjectImage, ProjectLink, ProjectListItem, ProjectTask, TaskStatus, ChatMessage, User } from "~/shared/types";
 import { classesForTechTag } from "~/shared/lib";
 
 defineProps<{
@@ -35,6 +36,11 @@ defineProps<{
   openedImage: ProjectImage | null;
   uploadError: string;
 
+  links: ProjectLink[];
+  linksNewUrl: string;
+  linksError: string;
+  linksAdding: boolean;
+
   tasksColumn: (status: TaskStatus) => ProjectTask[];
   newTaskTitle: string;
 
@@ -60,6 +66,10 @@ const emit = defineEmits<{
   deleteImage: [imageId: number];
   openImage: [image: ProjectImage];
   closeImage: [];
+
+  addLink: [];
+  deleteLink: [linkId: number];
+  "update:linksNewUrl": [value: string];
 
   addClient: [clientId: number];
   removeClient: [clientId: number];
@@ -188,6 +198,19 @@ const onSaveProject = () => {
           </template>
           <p v-else class="text-sm text-zinc-500 dark:text-zinc-400">Не указан</p>
         </div>
+
+        <ProjectLinksBar :links="links" />
+
+        <ProjectLinksManager
+          v-if="isDeveloper"
+          :new-url="linksNewUrl"
+          :links="links"
+          :link-error="linksError"
+          :adding="linksAdding"
+          @update:new-url="emit('update:linksNewUrl', $event)"
+          @add="emit('addLink')"
+          @delete="emit('deleteLink', $event)"
+        />
 
         <ProjectGallery
           :images="images"

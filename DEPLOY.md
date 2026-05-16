@@ -94,6 +94,17 @@ docker compose up -d --force-recreate
 
 При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
 
+### Миграция `email` → `login` (существующая prod-БД)
+
+Если в таблице `User` ещё колонка `email`, `db push` без сброса не сработает. Сохранить данные:
+
+```bash
+docker exec -i gogol-dashboard sh -c 'sqlite3 /data/prod.db' < prisma/migrations/email-to-login.sql
+docker exec gogol-dashboard npx prisma db push
+```
+
+Либо после бэкапа тома `gogol-sqlite-data` удалить `prod.db` и пересоздать (`POST /api/seed` — разработчик `admin` / `12345678`).
+
 ### Ошибка «Could not find Prisma Schema» (часто на шаге **5/9** `RUN npm ci`)
 
 Причина: в `package.json` скрипт **`prepare`** вызывает `prisma generate` сразу после установки пакетов, а в Dockerfile **`COPY . .` идёт только после `npm ci`**, поэтому файла `prisma/schema.prisma` ещё нет.

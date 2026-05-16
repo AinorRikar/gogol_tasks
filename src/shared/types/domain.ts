@@ -4,8 +4,18 @@ export type ProjectStatus = "ACTIVE" | "COMPLETED" | "ABANDONED" | "SUPPORTED" |
 export interface User {
   id: number;
   name: string;
-  email: string;
+  login: string;
   role: UserRole;
+}
+
+export interface UserProjectRef {
+  id: number;
+  title: string;
+}
+
+export interface ClientWithProjects extends User {
+  role: "CLIENT";
+  projects: UserProjectRef[];
 }
 
 export interface ProjectListItem {
@@ -51,4 +61,14 @@ export interface ProjectImage {
   mimeType: string;
   createdAt: string;
   uploadedBy: Pick<User, "id" | "name">;
+}
+
+export interface ProjectLink {
+  id: number;
+  projectId: number;
+  url: string;
+  title: string;
+  iconUrl: string;
+  order: number;
+  createdAt: string;
 }

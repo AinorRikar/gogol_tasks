@@ -65,7 +65,7 @@
 Схема Prisma: `prisma/schema.prisma`.
 
 Ключевые сущности:
-- `User` — пользователь (роль, email, passwordHash).
+- `User` — пользователь (роль, login, passwordHash).
 - `Project` — проект (status, visibility, hidden, archivedAt, **useForPortfolio** — участие в портфельной выборке на фронте, **techStack** — строка со стеком в формате CSV для простого хранения без отдельной таблицы).
 - `ProjectMember` — назначение заказчиков в проект.
 - `ChatMessage` — сообщения чата (включая `sentAt`).
@@ -90,7 +90,7 @@
   Тонкий orchestration-роут: собирает composables и рендерит `ProjectDetailsPage`.
 
 - `src/features/session-switcher/ui/SessionSwitcher.vue`  
-  Вход, регистрация, выход, отображение текущей сессии.
+  Вход по логину/паролю, выход, отображение текущей сессии.
 
 - `src/features/theme-toggle/ui/ThemeToggle.vue`  
   Переключение `light/dark`.
@@ -146,14 +146,13 @@
 ## 7) Backend API: что делает каждый модуль
 
 ### Auth (`server/api/auth`)
-- `login.post.ts` — вход, проверка пароля, установка JWT-cookie.
-- `register.post.ts` — регистрация пользователя.
+- `login.post.ts` — вход по логину и паролю, установка JWT-cookie.
 - `me.get.ts` — возврат текущего пользователя по cookie.
 - `logout.post.ts` — очистка auth-cookie.
 
 ### Users (`server/api/users`)
 - `index.get.ts` — список пользователей (ограниченный набор полей).
-- `index.post.ts` — создание пользователя (для developer-сценариев).
+- `index.post.ts` — создание клиента разработчиком (имя, логин, пароль).
 
 ### Projects (`server/api/projects`)
 - `index.get.ts` — список проектов с фильтрами и логикой видимости.

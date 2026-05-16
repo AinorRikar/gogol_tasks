@@ -2,6 +2,7 @@
 import { useProject, useProjectId, useProjectMembers } from "~/entities/project";
 import { useProjectChat } from "~/features/project-chat";
 import { useProjectImages } from "~/features/project-images";
+import { useProjectLinks } from "~/features/project-links";
 import { useProjectTasks } from "~/features/project-tasks";
 import { ProjectDetailsPage } from "~/widgets/project-details";
 import { useCurrentUser } from "~/shared/api";
@@ -51,6 +52,8 @@ const {
   closeImagePreview
 } = useProjectImages(projectId);
 
+const { links, newUrl, linkError, adding, loadLinks, addLink, deleteLink } = useProjectLinks(projectId);
+
 const onAddClient = async (clientId: number) => {
   await addClientToProject(clientId);
   await loadProject();
@@ -61,10 +64,20 @@ const onRemoveClient = async (clientId: number) => {
   await loadProject();
 };
 
+const onOpenMembers = async () => {
+  showMembersModal.value = true;
+  if (isDeveloper.value) {
+    await loadUsers();
+  }
+};
+
 await loadProject();
 await loadTasks();
 await loadImages();
-await loadUsers();
+await loadLinks();
+if (isDeveloper.value) {
+  await loadUsers();
+}
 
 if (canUseChat.value) {
   await loadMessages();
@@ -101,6 +114,10 @@ onBeforeUnmount(unsubscribe);
     :images="images"
     :opened-image="openedImage"
     :upload-error="uploadError"
+    :links="links"
+    :links-new-url="newUrl"
+    :links-error="linkError"
+    :links-adding="adding"
     :tasks-column="columnTasks"
     :new-task-title="newTaskTitle"
     :messages="messages"
@@ -108,7 +125,7 @@ onBeforeUnmount(unsubscribe);
     :new-message="newMessage"
     @set-tab="activeTab = $event"
     @toggle-edit="showEdit = !showEdit"
-    @open-members="showMembersModal = true"
+    @open-members="onOpenMembers"
     @close-members="showMembersModal = false"
     @archive="archiveProject"
     @save-project="saveProject"
@@ -119,6 +136,9 @@ onBeforeUnmount(unsubscribe);
     @delete-image="deleteImage"
     @open-image="openImagePreview"
     @close-image="closeImagePreview"
+    @add-link="addLink"
+    @delete-link="deleteLink"
+    @update:links-new-url="newUrl = $event"
     @add-client="onAddClient"
     @remove-client="onRemoveClient"
     @update:new-task-title="newTaskTitle = $event"

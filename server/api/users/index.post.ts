@@ -1,17 +1,17 @@
 /**
  * POST /api/users
- * Только DEVELOPER: создаёт пользователя с паролем (например для админ-сценариев).
+ * Только DEVELOPER: создаёт клиента (имя, логин, пароль).
  */
-import { UserRole } from "@prisma/client";
-import { readBody } from "h3";
+import { Prisma, UserRole } from "@prisma/client";
+import { createError, readBody } from "h3";
 import { z } from "zod";
-import { getCurrentUser, assertDeveloper, hashPassword } from "../../utils/auth";
+import { assertDeveloper, getCurrentUser, hashPassword } from "../../utils/auth";
 import { prisma } from "../../utils/prisma";
+import { loginFieldSchema, toPublicUser } from "../../utils/user";
 
-const createUserSchema = z.object({
+const createClientSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email(),
-  role: z.nativeEnum(UserRole),
+  login: loginFieldSchema,
   password: z.string().min(4)
 });
 
@@ -19,19 +19,22 @@ export default defineEventHandler(async (event) => {
   const currentUser = await getCurrentUser(event);
   assertDeveloper(currentUser);
 
-  const payload = createUserSchema.parse(await readBody(event));
-  const user = await prisma.user.create({
-    data: {
-      name: payload.name,
-      email: payload.email,
-      role: payload.role,
-      passwordHash: hashPassword(payload.password)
+  const payload = createClientSchema.parse(await readBody(event));
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        name: payload.name,
+        login: payload.login,
+        role: UserRole.CLIENT,
+        passwordHash: hashPassword(payload.password)
+      }
+    });
+    return toPublicUser(user);
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw createError({ statusCode: 409, statusMessage: "Login already taken" });
     }
-  });
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role
-  };
+    throw error;
+  }
 });

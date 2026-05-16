@@ -1,11 +1,16 @@
 import type { ProjectListItem, User } from "~/shared/types";
-import { useApi } from "~/shared/api";
+import { useApi, useCurrentUser } from "~/shared/api";
 
 export const useProjectMembers = (projectId: Ref<number>, project: Ref<ProjectListItem | null>) => {
+  const currentUser = useCurrentUser();
   const users = ref<User[]>([]);
   const showMembersModal = ref(false);
 
   const loadUsers = async () => {
+    if (currentUser.value?.role !== "DEVELOPER") {
+      users.value = [];
+      return;
+    }
     users.value = await useApi<User[]>("/api/users");
   };
 

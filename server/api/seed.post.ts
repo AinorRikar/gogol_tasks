@@ -1,25 +1,25 @@
 /**
  * POST /api/seed
- * Демо-наполнение SQLite при пустой БД (пользователи, проекты, сообщения, задачи).
- * Если пользователи уже есть — обновляет пароли/роли заданной учётке и выходит без повторного сида.
+ * Демо-данные. Учётка разработчика: login admin, пароль 12345678.
  */
 import { ProjectStatus, UserRole } from "@prisma/client";
 import { prisma } from "../utils/prisma";
 import { hashPassword } from "../utils/auth";
 
+const DEV_LOGIN = "admin";
+const DEV_PASSWORD = "12345678";
+
 export default defineEventHandler(async () => {
-  const devEmail = "ainorrikar@gmail.com";
-  const devPassword = "12345678";
   const usersCount = await prisma.user.count();
   if (usersCount > 0) {
-    const existingDeveloperByEmail = await prisma.user.findUnique({ where: { email: devEmail } });
-    if (existingDeveloperByEmail) {
+    const existingDeveloper = await prisma.user.findUnique({ where: { login: DEV_LOGIN } });
+    if (existingDeveloper) {
       await prisma.user.update({
-        where: { id: existingDeveloperByEmail.id },
+        where: { id: existingDeveloper.id },
         data: {
-          name: "Ainor Rikar",
+          name: "Разработчик",
           role: UserRole.DEVELOPER,
-          passwordHash: hashPassword(devPassword)
+          passwordHash: hashPassword(DEV_PASSWORD)
         }
       });
     } else {
@@ -28,17 +28,17 @@ export default defineEventHandler(async () => {
         await prisma.user.update({
           where: { id: anyDeveloper.id },
           data: {
-            name: "Ainor Rikar",
-            email: devEmail,
-            passwordHash: hashPassword(devPassword)
+            name: "Разработчик",
+            login: DEV_LOGIN,
+            passwordHash: hashPassword(DEV_PASSWORD)
           }
         });
       } else {
         await prisma.user.create({
           data: {
-            name: "Ainor Rikar",
-            email: devEmail,
-            passwordHash: hashPassword(devPassword),
+            name: "Разработчик",
+            login: DEV_LOGIN,
+            passwordHash: hashPassword(DEV_PASSWORD),
             role: UserRole.DEVELOPER
           }
         });
@@ -53,27 +53,28 @@ export default defineEventHandler(async () => {
           prisma.user.update({
             where: { id: user.id },
             data: {
-              passwordHash: hashPassword(user.role === UserRole.DEVELOPER ? devPassword : "client123")
+              passwordHash: hashPassword(user.role === UserRole.DEVELOPER ? DEV_PASSWORD : "client123")
             }
           })
         )
     );
+
     return {
       seeded: false,
       reason: "Already seeded",
       credentials: [
-        { email: devEmail, password: devPassword, role: "DEVELOPER" },
-        { email: "maria@client.local", password: "client123", role: "CLIENT" },
-        { email: "ivan@client.local", password: "client123", role: "CLIENT" }
+        { login: DEV_LOGIN, password: DEV_PASSWORD, role: "DEVELOPER" },
+        { login: "maria", password: "client123", role: "CLIENT" },
+        { login: "ivan", password: "client123", role: "CLIENT" }
       ]
     };
   }
 
   const developer = await prisma.user.create({
     data: {
-      name: "Ainor Rikar",
-      email: devEmail,
-      passwordHash: hashPassword(devPassword),
+      name: "Разработчик",
+      login: DEV_LOGIN,
+      passwordHash: hashPassword(DEV_PASSWORD),
       role: UserRole.DEVELOPER
     }
   });
@@ -82,7 +83,7 @@ export default defineEventHandler(async () => {
     prisma.user.create({
       data: {
         name: "Мария Заказчик",
-        email: "maria@client.local",
+        login: "maria",
         passwordHash: hashPassword("client123"),
         role: UserRole.CLIENT
       }
@@ -90,7 +91,7 @@ export default defineEventHandler(async () => {
     prisma.user.create({
       data: {
         name: "Иван Заказчик",
-        email: "ivan@client.local",
+        login: "ivan",
         passwordHash: hashPassword("client123"),
         role: UserRole.CLIENT
       }
@@ -146,9 +147,9 @@ export default defineEventHandler(async () => {
   return {
     seeded: true,
     credentials: [
-      { email: devEmail, password: devPassword, role: "DEVELOPER" },
-      { email: "maria@client.local", password: "client123", role: "CLIENT" },
-      { email: "ivan@client.local", password: "client123", role: "CLIENT" }
+      { login: DEV_LOGIN, password: DEV_PASSWORD, role: "DEVELOPER" },
+      { login: "maria", password: "client123", role: "CLIENT" },
+      { login: "ivan", password: "client123", role: "CLIENT" }
     ]
   };
 });
