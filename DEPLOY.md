@@ -94,6 +94,31 @@ docker compose up -d --force-recreate
 
 При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
 
+### 502 Bad Gateway на `/dashboard/`
+
+Чаще всего контейнер **gogol-dashboard не слушает порт 3000** (упал при старте). Nginx отдаёт 502, если бэкенд недоступен.
+
+```bash
+docker ps -a | grep gogol-dashboard
+docker logs gogol-dashboard --tail 80
+```
+
+Типичные строки в логах:
+
+| Сообщение | Что делать |
+|-----------|------------|
+| `FATAL: prisma db push failed` | См. миграцию `email` → `login` ниже или обновите образ (entrypoint сам применяет SQL при колонке `email`). |
+| `Prisma schema not found` | Пересоберите образ: `docker compose build --no-cache`. |
+| `set JWT_SECRET in .env` | Создайте `.env` с `JWT_SECRET=...` и снова `docker compose up -d`. |
+
+Проверка из nginx:
+
+```bash
+docker exec mysite-nginx wget -qO- --timeout=3 http://gogol-dashboard:3000/dashboard/ 2>&1 | head
+```
+
+Если `Connection refused` — чините дашборд. Если отвечает HTML — смотрите конфиг nginx (`location /dashboard/`).
+
 ### Миграция `email` → `login` (существующая prod-БД)
 
 Если в таблице `User` ещё колонка `email`, `db push` без сброса не сработает. Сохранить данные:
