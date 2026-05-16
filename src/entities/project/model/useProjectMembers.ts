@@ -11,7 +11,11 @@ export const useProjectMembers = (projectId: Ref<number>, project: Ref<ProjectLi
       users.value = [];
       return;
     }
-    users.value = await useApi<User[]>("/api/users");
+    try {
+      users.value = await useApi<User[]>("/api/users");
+    } catch {
+      users.value = [];
+    }
   };
 
   const clients = computed(() => users.value.filter((user) => user.role === "CLIENT"));

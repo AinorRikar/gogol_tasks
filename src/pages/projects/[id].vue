@@ -75,17 +75,18 @@ await loadProject();
 await loadTasks();
 await loadImages();
 await loadLinks();
-if (isDeveloper.value) {
-  await loadUsers();
-}
 
 if (canUseChat.value) {
   await loadMessages();
 }
 
-onMounted(() => {
-  if (!canUseChat.value) return;
-  subscribe();
+onMounted(async () => {
+  if (isDeveloper.value) {
+    await loadUsers();
+  }
+  if (canUseChat.value) {
+    subscribe();
+  }
 });
 
 onBeforeUnmount(unsubscribe);

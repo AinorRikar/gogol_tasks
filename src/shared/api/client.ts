@@ -17,16 +17,10 @@ export const useCurrentUser = () => useState<User | null>("current-user", () => 
 
 export const useInitActiveUser = async () => {
   const currentUser = useCurrentUser();
-  const mePath = withAppBase("/api/auth/me");
 
   const fetchMe = async (): Promise<User | null> => {
     try {
-      if (import.meta.server) {
-        // При SSR обычный $fetch не передаёт Cookie браузера — сессия пропадала после F5.
-        const requestFetch = useRequestFetch();
-        return await requestFetch<User>(mePath);
-      }
-      return await $fetch<User>(mePath, { credentials: "include" });
+      return await useApi<User>("/api/auth/me");
     } catch {
       return null;
     }
@@ -42,8 +36,26 @@ export const useInitActiveUser = async () => {
   }
 };
 
+/**
+ * SSR: пробрасываем Cookie текущего запроса (иначе после F5 сессия «теряется» на внутренних API-вызовах).
+ * Клиент: credentials: "include".
+ */
 export const useApi = async <T>(path: string, options: Record<string, unknown> = {}) => {
-  return $fetch<T>(withAppBase(path), {
+  const url = withAppBase(path);
+
+  if (import.meta.server) {
+    const incoming = useRequestHeaders(["cookie"]);
+    const cookie = incoming.cookie;
+    return $fetch<T>(url, {
+      ...options,
+      headers: {
+        ...((options.headers as Record<string, string> | undefined) ?? {}),
+        ...(cookie ? { cookie } : {})
+      }
+    });
+  }
+
+  return $fetch<T>(url, {
     ...options,
     credentials: "include"
   });
