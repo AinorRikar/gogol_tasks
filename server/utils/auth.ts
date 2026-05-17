@@ -14,7 +14,7 @@ const AUTH_COOKIE = "auth_token";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 
 /**
- * Путь cookie: всегда «/» на одном хосте с MySite (и /, и /dashboard/api/…).
+ * Путь cookie: «/» — чтобы сессия работала и с префиксом приложения (/dashboard/), и без него.
  * Path=/dashboard иногда не уходит в запросах после F5 на мобильных/других браузерах.
  */
 const authCookiePath = () => "/";

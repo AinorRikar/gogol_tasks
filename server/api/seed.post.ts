@@ -104,13 +104,23 @@ export default defineEventHandler(async () => {
   const project = await prisma.project.create({
     data: {
       title: "CRM dashboard",
-      description: "Публичный проект для демонстрации прогресса и аналитики.",
+      shortDescription: "Публичный проект для демонстрации прогресса и аналитики.",
+      fullDescription:
+        "CRM dashboard — демо-проект с канбаном, чатом и галереей. Пример для Integration API (портфолио).",
+      version: "1.0.0",
       status: ProjectStatus.ACTIVE,
       visibility: true,
+      useForPortfolio: true,
       techStack: crmTechStack,
       createdById: developer.id,
       members: {
         create: clients.map((client) => ({ userId: client.id }))
+      },
+      referenceBlocks: {
+        create: [
+          { title: "Активные пользователи", content: "+40% за квартал", order: 0 },
+          { title: "Время отклика API", content: "p95 < 120 мс", order: 1 }
+        ]
       }
     }
   });
@@ -126,7 +136,9 @@ export default defineEventHandler(async () => {
   await prisma.project.create({
     data: {
       title: "Private maintenance sprint",
-      description: "Спринт техподдержки для отдельного клиента.",
+      shortDescription: "Спринт техподдержки для отдельного клиента.",
+      fullDescription: "Закрытый спринт техподдержки — без публикации в портфолио.",
+      version: "0.9.2",
       status: ProjectStatus.SUPPORTED,
       visibility: false,
       createdById: developer.id,

@@ -2,6 +2,7 @@
 import { ProjectCard } from "~/entities/project";
 import type { ProjectListItem, ProjectStatus } from "~/shared/types";
 import { useApi } from "~/shared/api";
+import { ToggleChip } from "~/shared/ui";
 
 const projects = ref<ProjectListItem[]>([]);
 const error = ref("");
@@ -45,16 +46,16 @@ onMounted(fetchProjects);
         <option value="PUBLIC">Публичные</option>
         <option value="PRIVATE">Приватные</option>
       </select>
-      <label class="glass-panel flex items-center gap-2 px-3 py-2 text-sm">
-        <Icon name="material-symbols:cases-rounded" class="h-4 w-4 text-violet-500 dark:text-violet-400" />
-        <input v-model="portfolioOnly" type="checkbox" />
-        В портфолио
-      </label>
-      <label class="glass-panel flex items-center gap-2 px-3 py-2 text-sm">
-        <Icon name="material-symbols:archive-rounded" class="h-4 w-4 text-amber-700 dark:text-amber-400" />
-        <input v-model="includeArchived" type="checkbox" >
-        Показывать архив
-      </label>
+      <ToggleChip
+        v-model="portfolioOnly"
+        label="В портфолио"
+        icon="material-symbols:cases-rounded"
+      />
+      <ToggleChip
+        v-model="includeArchived"
+        label="Показывать архив"
+        icon="material-symbols:archive-rounded"
+      />
     </div>
     <p v-if="error" class="glass-panel px-3 py-2 text-sm text-amber-600 dark:text-amber-400">{{ error }}</p>
     <div class="grid gap-4 md:grid-cols-2">

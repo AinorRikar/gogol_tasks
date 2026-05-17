@@ -8,13 +8,11 @@ export default defineNuxtConfig({
   srcDir: "src/",
   app: {
     baseURL: appBase.endsWith("/") ? appBase : `${appBase}/`,
-    ...(isSubpathDeploy
-      ? {
-          head: {
-            meta: [{ name: "robots", content: "noindex, nofollow" }]
-          }
-        }
-      : {})
+    head: {
+      title: "Gogol Dashboard",
+      titleTemplate: "%s · Gogol Dashboard",
+      ...(isSubpathDeploy ? { meta: [{ name: "robots", content: "noindex, nofollow" }] } : {})
+    }
   },
   modules: ["@nuxtjs/tailwindcss", "@nuxtjs/color-mode", "@nuxt/icon"],
   css: ["~/assets/css/main.css"],

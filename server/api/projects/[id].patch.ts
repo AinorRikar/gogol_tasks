@@ -1,7 +1,5 @@
 /**
  * PATCH /api/projects/:id
- * Только DEVELOPER. Частичное обновление полей проекта через Prisma (undefined поля не трогаются в объекте data — передаются как есть из zod).
- * Если передан clientIds: полная пересборка ProjectMember (deleteMany + createMany) — проще, чем diff.
  */
 import { ProjectStatus } from "@prisma/client";
 import { getRouterParam, readBody } from "h3";
@@ -11,7 +9,9 @@ import { prisma } from "../../utils/prisma";
 
 const updateProjectSchema = z.object({
   title: z.string().min(3).optional(),
-  description: z.string().min(10).optional(),
+  shortDescription: z.string().min(10).optional(),
+  fullDescription: z.string().optional(),
+  version: z.string().max(64).optional(),
   status: z.nativeEnum(ProjectStatus).optional(),
   visibility: z.boolean().optional(),
   hidden: z.boolean().optional(),
@@ -30,7 +30,9 @@ export default defineEventHandler(async (event) => {
     where: { id: projectId },
     data: {
       title: payload.title,
-      description: payload.description,
+      shortDescription: payload.shortDescription,
+      fullDescription: payload.fullDescription,
+      version: payload.version,
       status: payload.status,
       visibility: payload.visibility,
       hidden: payload.hidden,
@@ -40,9 +42,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (payload.clientIds) {
-    await prisma.projectMember.deleteMany({
-      where: { projectId }
-    });
+    await prisma.projectMember.deleteMany({ where: { projectId } });
     if (payload.clientIds.length) {
       await prisma.projectMember.createMany({
         data: payload.clientIds.map((userId) => ({ projectId, userId }))

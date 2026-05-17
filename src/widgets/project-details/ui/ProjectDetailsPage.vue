@@ -5,7 +5,17 @@ import { ProjectGallery, ImagePreviewOverlay } from "~/features/project-images";
 import { ProjectMembersManager } from "~/features/project-members";
 import { ProjectKanbanBoard } from "~/features/project-tasks";
 import { ProjectLinksBar, ProjectLinksManager } from "~/features/project-links";
-import type { ProjectImage, ProjectLink, ProjectListItem, ProjectTask, TaskStatus, ChatMessage, User } from "~/shared/types";
+import { ReferenceBlocksPanel } from "~/features/project-reference-blocks";
+import type {
+  ProjectImage,
+  ProjectLink,
+  ProjectListItem,
+  ProjectReferenceBlock,
+  ProjectTask,
+  TaskStatus,
+  ChatMessage,
+  User
+} from "~/shared/types";
 import { classesForTechTag } from "~/shared/lib";
 
 defineProps<{
@@ -22,13 +32,21 @@ defineProps<{
 
   editForm: {
     title: string;
-    description: string;
+    shortDescription: string;
+    fullDescription: string;
+    version: string;
     status: ProjectListItem["status"];
     visibility: boolean;
     hidden: boolean;
     useForPortfolio: boolean;
     techStack: string;
   };
+
+  referenceBlocks: ProjectReferenceBlock[];
+  referenceBlocksLoading: boolean;
+  referenceBlocksError: string;
+  referenceNewTitle: string;
+  referenceNewContent: string;
 
   availableClients: User[];
 
@@ -81,6 +99,12 @@ const emit = defineEmits<{
 
   "update:newMessage": [value: string];
   sendMessage: [];
+
+  createReferenceBlock: [];
+  saveReferenceBlock: [block: ProjectReferenceBlock];
+  deleteReferenceBlock: [blockId: number];
+  "update:referenceNewTitle": [value: string];
+  "update:referenceNewContent": [value: string];
 }>();
 
 const techStackTags = (csv: string) => csv.split(",").map((s) => s.trim()).filter(Boolean);
@@ -175,7 +199,28 @@ const onSaveProject = () => {
           </div>
         </div>
 
-        <p class="mt-2 text-zinc-600 dark:text-zinc-300">{{ project.description || "Описание недоступно" }}</p>
+        <p v-if="project.version" class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">Версия {{ project.version }}</p>
+        <div v-if="project.fullDescription" class="mt-3">
+          <p class="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            Описание
+          </p>
+          <p class="whitespace-pre-wrap text-zinc-600 dark:text-zinc-300">{{ project.fullDescription }}</p>
+        </div>
+        <p v-else class="mt-2 text-zinc-600 dark:text-zinc-300">Описание недоступно</p>
+
+        <ReferenceBlocksPanel
+          v-if="isDeveloper"
+          :blocks="referenceBlocks"
+          :loading="referenceBlocksLoading"
+          :error="referenceBlocksError"
+          :new-title="referenceNewTitle"
+          :new-content="referenceNewContent"
+          @update:new-title="emit('update:referenceNewTitle', $event)"
+          @update:new-content="emit('update:referenceNewContent', $event)"
+          @create="emit('createReferenceBlock')"
+          @save="emit('saveReferenceBlock', $event)"
+          @delete="emit('deleteReferenceBlock', $event)"
+        />
 
         <div class="mt-4">
           <p class="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Стек</p>

@@ -1,6 +1,7 @@
 /**
- * Доступ MySite к узкому read-only API: JWT в Authorization: Bearer … или X-Site-Token.
- * Подпись HS256 тем же секретом, что INTEGRATION_SECRET в .env у дашборда и MySite (выдаётся только сервером MySite).
+ * Проверка JWT для Integration API (внешний сайт / портфолио).
+ * Заголовки: Authorization: Bearer … или X-Site-Token. Подпись HS256, секрет INTEGRATION_SECRET.
+ * Токен выдаёт сервер клиента, не браузер напрямую. См. API.md.
  */
 import jwt from "jsonwebtoken";
 import { createError, getHeader, type H3Event } from "h3";

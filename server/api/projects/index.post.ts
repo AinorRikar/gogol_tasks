@@ -1,6 +1,5 @@
 /**
  * POST /api/projects
- * Только DEVELOPER. Тело: поля нового Project + techStack CSV. Prisma project.create, createdById = текущий пользователь.
  */
 import { ProjectStatus } from "@prisma/client";
 import { readBody } from "h3";
@@ -10,7 +9,9 @@ import { prisma } from "../../utils/prisma";
 
 const createProjectSchema = z.object({
   title: z.string().min(3),
-  description: z.string().min(10),
+  shortDescription: z.string().min(10),
+  fullDescription: z.string().default(""),
+  version: z.string().max(64).default(""),
   status: z.nativeEnum(ProjectStatus),
   visibility: z.boolean(),
   hidden: z.boolean().default(false),
@@ -26,7 +27,9 @@ export default defineEventHandler(async (event) => {
   return prisma.project.create({
     data: {
       title: payload.title,
-      description: payload.description,
+      shortDescription: payload.shortDescription,
+      fullDescription: payload.fullDescription || payload.shortDescription,
+      version: payload.version,
       status: payload.status,
       visibility: payload.visibility,
       hidden: payload.hidden,

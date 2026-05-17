@@ -21,7 +21,9 @@ export interface ClientWithProjects extends User {
 export interface ProjectListItem {
   id: number;
   title: string;
-  description?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  version?: string;
   status: ProjectStatus;
   visibility: boolean;
   hidden: boolean;
@@ -61,6 +63,16 @@ export interface ProjectImage {
   mimeType: string;
   createdAt: string;
   uploadedBy: Pick<User, "id" | "name">;
+}
+
+export interface ProjectReferenceBlock {
+  id: number;
+  projectId: number;
+  title: string;
+  content: string;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProjectLink {

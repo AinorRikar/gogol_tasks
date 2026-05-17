@@ -54,9 +54,9 @@ defineExpose({ flushPending });
 </script>
 
 <template>
-  <div class="grid gap-2">
+  <div class="grid min-w-0 gap-2">
     <span class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Стек технологий</span>
-    <div class="soft-input flex min-h-[2.5rem] flex-wrap items-center gap-2 py-2">
+    <div class="soft-input flex min-h-[2.5rem] w-full min-w-0 flex-wrap items-center gap-2 py-2">
       <span
         v-for="(tag, i) in items"
         :key="`${i}-${tag}`"
@@ -76,7 +76,7 @@ defineExpose({ flushPending });
       <input
         v-model="stackInput"
         type="text"
-        class="min-w-[8rem] flex-1 border-0 bg-transparent py-0.5 text-sm outline-none focus:ring-0"
+        class="min-w-0 flex-1 basis-20 border-0 bg-transparent py-0.5 text-sm outline-none focus:ring-0"
         placeholder="Введите технологию и запятую"
         autocomplete="off"
         @keydown="onStackKeydown"

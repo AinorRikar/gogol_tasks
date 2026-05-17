@@ -2,6 +2,8 @@
 import { ClientCabinet, DeveloperCabinet } from "~/features/personal-cabinet";
 import { useCurrentUser } from "~/shared/api";
 
+useHead({ title: "Кабинет" });
+
 const currentUser = useCurrentUser();
 </script>
 

@@ -23,11 +23,7 @@ const isDark = computed({
     class="glass-panel flex cursor-pointer items-center gap-2 px-3 py-2 text-sm"
     :class="stacked ? 'w-full justify-between' : ''"
   >
-    <span class="inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
-      <Icon
-        :name="isDark ? 'material-symbols:dark-mode-rounded' : 'material-symbols:light-mode-rounded'"
-        class="h-4 w-4 text-zinc-500 dark:text-zinc-300"
-      />
+    <span class="text-zinc-600 dark:text-zinc-300">
       {{ isDark ? "Темная тема" : "Светлая тема" }}
     </span>
     <input v-model="isDark" type="checkbox" class="sr-only" />
@@ -37,9 +33,14 @@ const isDark = computed({
       aria-hidden="true"
     >
       <span
-        class="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition"
+        class="absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow transition"
         :class="isDark ? 'left-5' : 'left-0.5'"
-      />
+      >
+        <Icon
+          :name="isDark ? 'material-symbols:dark-mode-rounded' : 'material-symbols:light-mode-rounded'"
+          class="h-3.5 w-3.5 text-amber-500 dark:text-indigo-400"
+        />
+      </span>
     </span>
   </label>
 </template>

@@ -24,7 +24,7 @@ watch(
         >
           <Icon name="material-symbols:dashboard-rounded" class="h-6 w-6 shrink-0 text-indigo-500 dark:text-sky-400" />
           <span class="truncate bg-gradient-to-r from-indigo-500 to-sky-500 bg-clip-text text-transparent">
-            Gogol CRM Tasks
+            Gogol Dashboard
           </span>
         </NuxtLink>
 

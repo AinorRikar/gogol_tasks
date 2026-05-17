@@ -1,10 +1,23 @@
-# Деплой дашборда рядом с MySite (один IP: `/` и `/dashboard/`)
+# Развёртывание Gogol Dashboard
 
-## Идея
+Инструкция для сценария: **основной сайт** отдаётся публичным nginx, дашборд живёт в Docker на том же сервере по префиксу `/dashboard/` (или другому — через `NUXT_PUBLIC_APP_BASEURL`).
 
-- Снаружи открыт только **nginx из проекта MySite** (порты 80 / при необходимости 443).
-- Контейнер **gogol-dashboard** слушает **3000 только во внутренней сети Docker**, на хост не пробрасывается.
-- Оба стека подключены к **одной сети** с именем `web`.
+Контракт Integration API для внешнего сайта: **[API.md](API.md)**.
+
+## Схема
+
+```text
+Интернет → nginx (основной сайт) :80 / :443
+              ├─ /              → upstream основного приложения
+              └─ /dashboard/    → http://gogol-dashboard:3000/dashboard/
+
+Docker network "web":
+  - контейнер edge-nginx (проброс 80/443 на хост)
+  - контейнер основного приложения
+  - контейнер gogol-dashboard (порт 3000 только внутри сети)
+```
+
+Дашборд **не пробрасывает** порт 3000 на хост — к нему ходит только nginx по имени сервиса `gogol-dashboard`.
 
 ## Один раз на сервере
 
@@ -12,193 +25,158 @@
 docker network create web
 ```
 
-Если сеть уже создана старым compose MySite под другим именем — либо переименуйте/пересоздайте, либо укажите то же `name:` в обоих `docker-compose.yml`.
+В `docker-compose.yml` **основного сайта** и **дашборда** укажите:
 
-## MySite
-
-В репозитории MySite:
-
-- `docker-compose.yml` использует `networks.web.external: true`, `name: web`.
-- `nginx/conf.d/default.conf` проксирует `/dashboard/` на сервис `gogol-dashboard:3000`.
-
-После изменения nginx:
-
-```bash
-cd /path/to/MySite
-docker compose up -d
-# при правке только конфига nginx:
-docker exec mysite-nginx nginx -s reload
+```yaml
+networks:
+  web:
+    external: true
+    name: web
 ```
 
-### Сайт не открывается по IP (ни `/`, ни `/dashboard/`)
+## Nginx основного сайта
 
-1. **Проверьте контейнеры и сеть `web`**
+Пример фрагмента `location` (имена upstream подставьте свои):
 
-```bash
-docker ps -a | grep -E 'mysite|gogol'
-docker network inspect web --format '{{range .Containers}}{{.Name}} {{end}}'
+```nginx
+location /dashboard/ {
+  proxy_pass http://gogol-dashboard:3000/dashboard/;
+  proxy_http_version 1.1;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
 ```
 
-В списке сети должны быть как минимум: `mysite-nginx`, `mysite-app`, `gogol-dashboard`. Если чего-то нет — этот стек не подключён к `web` или контейнер упал.
-
-2. **Логи**
+После правки конфига:
 
 ```bash
-docker logs mysite-nginx --tail 80
-docker logs mysite-app --tail 80
-docker logs gogol-dashboard --tail 80
+docker exec <edge-nginx> nginx -t
+docker exec <edge-nginx> nginx -s reload
 ```
 
-Сообщения вида `host not found in upstream` / `no resolver defined` — проблема имён или конфига nginx.
+## Переменные окружения дашборда
 
-3. **Доступность бэкендов из nginx**
-
-```bash
-docker exec mysite-nginx wget -qO- --timeout=3 http://mysite-app:3000/ 2>&1 | head
-docker exec mysite-nginx wget -qO- --timeout=3 http://gogol-dashboard:3000/dashboard/ 2>&1 | head
-```
-
-Первая команда — визитка, вторая — дашборд. Если первая падает, **главная страница** не откроется (nginx отдаст 502).
-
-4. **Upstream в nginx** — для визитки в конфиге указано **`mysite-app:3000`** (имя контейнера), не абстрактное `app`: на общей внешней сети имя сервиса `app` иногда не резолвится. После правки конфига: `docker exec mysite-nginx nginx -t && docker exec mysite-nginx nginx -s reload`.
-
-5. **Порт 80 с хоста**
-
-```bash
-curl -v --max-time 5 http://127.0.0.1/
-```
-
-На сервере должно ответить что-то от Nuxt (или редирект). Если «Connection refused» — порт не проброшен (`ports: "80:80"` у `mysite-nginx`) или фаервол режет входящие на 80.
-
-6. **Не смешивайте `https://IP`**, если в `default.conf` ещё закомментирован блок `listen 443 ssl` — тогда снаружи открывайте **`http://IP`**.
-
-## Дашборд (этот проект)
-
-Создайте `.env` рядом с `docker-compose.yml`:
+Создайте `.env` рядом с `docker-compose.yml` дашборда:
 
 ```env
 JWT_SECRET=длинная-случайная-строка
-INTEGRATION_SECRET=другая-случайная-строка-общая-с-MySite
-CORS_ORIGIN=http://ВАШ_IP
+INTEGRATION_SECRET=другая-длинная-строка-общая-с-клиентом-сайта
+CORS_ORIGIN=https://ваш-публичный-хост
 ```
 
-Сборка и запуск (после `git pull` **обязательно** пересобрать образ, иначе контейнер останется на старом слое без схемы):
+| Переменная | Назначение |
+|------------|------------|
+| `DATABASE_URL` | В compose: `file:/data/prod.db` (том `gogol-sqlite-data`) |
+| `JWT_SECRET` | Подпись cookie-сессии CRM |
+| `INTEGRATION_SECRET` | Секрет для `/api/integration/*` (см. [API.md](API.md)) |
+| `NUXT_PUBLIC_APP_BASEURL` | В compose: `/dashboard/` (должен совпадать с build-arg в Dockerfile) |
+| `CORS_ORIGIN` | Разрешённый origin для `/api/**` (если API вызывают с другого домена) |
+
+## Первый деплой
 
 ```bash
-cd /path/to/gogol_tasks
+cd /path/to/gogol-dashboard
+cp .env.example .env   # и заполните секреты
 docker compose build --no-cache
-docker compose up -d --force-recreate
+docker compose up -d
 ```
 
-Быстрея вариант, если уверены в кэше: `docker compose up -d --build`. Если снова «schema not found» — только с `--no-cache`.
+При старте контейнера [docker-entrypoint.sh](docker-entrypoint.sh):
 
-При старте контейнера выполняется `prisma db push` к файлу `file:/data/prod.db` в томе `gogol-sqlite-data`.
+1. при необходимости применяет SQL-миграции к существующей БД;
+2. выполняет `prisma db push`;
+3. запускает Nitro на порту 3000.
 
-### 502 Bad Gateway на `/dashboard/`
+Демо-данные (опционально): `POST /api/seed` — разработчик `admin` / `12345678`.
 
-Чаще всего контейнер **gogol-dashboard не слушает порт 3000** (упал при старте). Nginx отдаёт 502, если бэкенд недоступен.
+## Обновление уже развёрнутого дашборда
+
+Типичный цикл после `git pull`:
+
+```bash
+cd /path/to/gogol-dashboard
+git pull
+docker compose build --no-cache    # при смене схемы Prisma или entrypoint
+docker compose up -d --force-recreate
+docker logs gogol-dashboard --tail 50
+```
+
+Для небольшого патча без смены схемы часто достаточно:
+
+```bash
+docker compose up -d --build
+```
+
+Обновление **только дашборда** не требует пересборки основного сайта (и наоборот). У пересоздаваемого контейнера возможен простой в несколько секунд.
+
+## Миграции SQLite (существующая prod-БД)
+
+Entrypoint автоматически проверяет старую схему и применяет SQL из `prisma/migrations/`:
+
+| Условие | Файл |
+|---------|------|
+| В `User` ещё есть колонка `email` | `email-to-login.sql` |
+| В `Project` ещё есть колонка `description` | `project-descriptions.sql` |
+
+Ручной запуск (если контейнер не стартует):
+
+```bash
+docker exec -i gogol-dashboard sh -c 'sqlite3 /data/prod.db' < prisma/migrations/email-to-login.sql
+docker exec -i gogol-dashboard sh -c 'sqlite3 /data/prod.db' < prisma/migrations/project-descriptions.sql
+docker exec gogol-dashboard npx prisma db push
+```
+
+**Внимание:** без бэкапа тома `gogol-sqlite-data` удаление `prod.db` уничтожит данные.
+
+## 502 Bad Gateway на `/dashboard/`
+
+Обычно nginx не достучался до `gogol-dashboard:3000` (контейнер упал при старте).
 
 ```bash
 docker ps -a | grep gogol-dashboard
 docker logs gogol-dashboard --tail 80
 ```
 
-Типичные строки в логах:
+| Сообщение в логах | Действие |
+|-------------------|----------|
+| `FATAL: prisma db push failed` | Миграции выше или обновите образ с актуальным entrypoint |
+| `Prisma schema not found` | `docker compose build --no-cache` из корня репозитория |
+| `set JWT_SECRET in .env` | Заполните `.env` и `docker compose up -d` |
 
-| Сообщение | Что делать |
-|-----------|------------|
-| `FATAL: prisma db push failed` | См. миграцию `email` → `login` ниже или обновите образ (entrypoint сам применяет SQL при колонке `email`). |
-| `Prisma schema not found` | Пересоберите образ: `docker compose build --no-cache`. |
-| `set JWT_SECRET in .env` | Создайте `.env` с `JWT_SECRET=...` и снова `docker compose up -d`. |
-
-Проверка из nginx:
+Проверка из контейнера nginx:
 
 ```bash
-docker exec mysite-nginx wget -qO- --timeout=3 http://gogol-dashboard:3000/dashboard/ 2>&1 | head
+docker exec <edge-nginx> wget -qO- --timeout=3 http://gogol-dashboard:3000/dashboard/ 2>&1 | head
 ```
 
-Если `Connection refused` — чините дашборд. Если отвечает HTML — смотрите конфиг nginx (`location /dashboard/`).
+Если здесь HTML, а снаружи 502 — смотрите `location /dashboard/` в nginx.
 
-### Миграция `email` → `login` (существующая prod-БД)
+### Сайт целиком не открывается
 
-Если в таблице `User` ещё колонка `email`, `db push` без сброса не сработает. Сохранить данные:
+1. Контейнеры в сети `web`: `docker network inspect web`
+2. Логи edge-nginx и основного приложения
+3. С хоста: `curl -v --max-time 5 http://127.0.0.1/`
+4. Не используйте `https://IP`, если SSL в nginx ещё не настроен — проверяйте `http://`
 
-```bash
-docker exec -i gogol-dashboard sh -c 'sqlite3 /data/prod.db' < prisma/migrations/email-to-login.sql
-docker exec gogol-dashboard npx prisma db push
-```
+## Сборка Docker и Prisma
 
-Либо после бэкапа тома `gogol-sqlite-data` удалить `prod.db` и пересоздать (`POST /api/seed` — разработчик `admin` / `12345678`).
+В Dockerfile используется `npm ci --ignore-scripts`, затем `COPY` исходников и отдельно `prisma generate` — иначе `prepare` в package.json падает до появления `prisma/schema.prisma`.
 
-### Ошибка «Could not find Prisma Schema» (часто на шаге **5/9** `RUN npm ci`)
+Если ошибка «Could not find Prisma Schema» на шаге `npm ci`:
 
-Причина: в `package.json` скрипт **`prepare`** вызывает `prisma generate` сразу после установки пакетов, а в Dockerfile **`COPY . .` идёт только после `npm ci`**, поэтому файла `prisma/schema.prisma` ещё нет.
-
-В Dockerfile используется **`npm ci --ignore-scripts`**, затем после копирования исходников вручную выполняются `prisma generate` и `nuxt prepare`.
-
-Другие причины той же формулировки ошибки:
-
-1. **Сборка не из корня репозитория** — проверка: `ls prisma/schema.prisma`.
-2. **`.dockerignore` отрезает `prisma`** — в репозитории игнорируются только `prisma/*.db`.
-3. **Старый образ без пересборки** — `docker compose build --no-cache`.
-
-## Обновление без остановки «всего Docker»
-
-- Обновляете **только MySite**: `cd MySite && docker compose build app && docker compose up -d app` — nginx и дашборд продолжают работать.
-- Обновляете **только дашборд**: `cd gogol_tasks && docker compose build && docker compose up -d` — MySite не трогается.
-
-У пересоздаваемого контейнера возможен короткий простой (секунды). Полный zero-downtime — два инстанса и переключение upstream в nginx (см. обсуждение в плане).
-
-## API для MySite (портфолио)
-
-Узкие маршруты (нужны **INTEGRATION_SECRET** на дашборде и тот же секрет на MySite):
-
-- `GET /dashboard/api/integration/portfolio` — список проектов с `useForPortfolio`.
-- `GET /dashboard/api/integration/projects/:id` — карточка (только портфельные, не архив; правила как у гостя).
-
-Токен: JWT **HS256**, срок жизни до **3 минут**, payload произвольный (например `{ "iss": "mysite" }`).
-
-Пример выдачи токена на стороне MySite (Node, тот же `jsonwebtoken`):
-
-```js
-import jwt from "jsonwebtoken";
-
-export function mintDashboardIntegrationToken() {
-  return jwt.sign({ iss: "mysite" }, process.env.INTEGRATION_SECRET, {
-    expiresIn: "2m",
-    algorithm: "HS256"
-  });
-}
-```
-
-Запрос с MySite (SSR или прокси):
-
-```http
-GET http://gogol-dashboard:3000/dashboard/api/integration/portfolio
-Authorization: Bearer <token>
-```
-
-С браузера (после того как сервер MySite отдал токен на страницу):
-
-```http
-GET http://ВАШ_IP/dashboard/api/integration/portfolio
-Authorization: Bearer <token>
-```
-
-Внутренний URL использует имя сервиса Docker; с браузера — публичный хост и префикс `/dashboard/`.
-
-## Переменные окружения дашборда
-
-| Переменная | Назначение |
-|------------|------------|
-| `DATABASE_URL` | В compose задан `file:/data/prod.db` |
-| `JWT_SECRET` | Подпись cookie-сессии |
-| `INTEGRATION_SECRET` | Общий секрет с MySite для `/api/integration/*` |
-| `NUXT_PUBLIC_APP_BASEURL` | В compose: `/dashboard/` (должен совпадать с build-arg в Dockerfile) |
-| `CORS_ORIGIN` | Для кросс-origin (при одном хосте с MySite обычно не критично) |
+- сборка из корня репозитория (`ls prisma/schema.prisma`);
+- в `.dockerignore` не исключена папка `prisma/` (игнорируются только `*.db`);
+- пересоберите: `docker compose build --no-cache`.
 
 ## Локальная разработка
 
-Без префикса: не задавайте `NUXT_PUBLIC_APP_BASEURL` (или `/`). Cookie и клиентские пути останутся от корня.
+Без префикса: не задавайте `NUXT_PUBLIC_APP_BASEURL` (или `/`). Cookie и пути API — от корня.
 
-Проверка «как в проде»: `NUXT_PUBLIC_APP_BASEURL=/dashboard/ npm run dev` и локальный nginx не обязателен, если смотрите только относительные пути (часть сценариев удобнее проверять через Docker).
+Проверка «как в проде»:
+
+```bash
+NUXT_PUBLIC_APP_BASEURL=/dashboard/ npm run dev
+```
+
+Диагностика на сервере (опционально): [scripts/server-diagnose-dashboard.sh](scripts/server-diagnose-dashboard.sh).

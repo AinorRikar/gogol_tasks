@@ -1,5 +1,5 @@
 # Сеть web должна существовать: docker network create web
-# Затем MySite и этот compose подключаются к ней (см. DEPLOY.md).
+# Основной сайт и дашборд подключаются к ней (см. DEPLOY.md).
 
 services:
   gogol-dashboard:

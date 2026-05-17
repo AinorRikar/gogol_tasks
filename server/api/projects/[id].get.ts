@@ -1,11 +1,10 @@
 /**
  * GET /api/projects/:id
- * Карточка проекта: сначала загрузка с участниками, затем цепочка прав (приватность, hidden, маскировка полей).
- * 403 если приватный проект и пользователь не в списке доступа.
  */
 import { createError, getRouterParam } from "h3";
 import { getCurrentUserOptional } from "../../utils/auth";
 import { canAccessProject, getProjectWithMembers } from "../../utils/project";
+import { buildProjectAccessContext, serializeProjectDetail } from "../../utils/projectSerializer";
 
 export default defineEventHandler(async (event) => {
   const currentUser = await getCurrentUserOptional(event);
@@ -18,27 +17,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: "No access to this project" });
   }
 
-  const isAssigned = !!currentUser && (project.members.some((member) => member.userId === currentUser.id) || project.createdById === currentUser.id);
-  const canReadHiddenProject = !!currentUser && (currentUser.role === "DEVELOPER" || isAssigned);
-  const isHiddenForViewer = project.hidden && !canReadHiddenProject;
-  const canReadDescription = project.visibility || (!!currentUser && (currentUser.role === "DEVELOPER" || isAssigned));
-
-  return {
-    id: project.id,
-    title: isHiddenForViewer ? "Скрытый проект" : project.title,
-    description: isHiddenForViewer
-      ? "Проект скрыт от общего доступа по требованию заказчика"
-      : canReadDescription
-        ? project.description
-        : undefined,
-    status: project.status,
-    visibility: project.visibility,
-    hidden: project.hidden,
-    useForPortfolio: project.useForPortfolio,
-    techStack: isHiddenForViewer ? "" : canReadDescription ? project.techStack : "",
-    canOpen: true,
-    archivedAt: project.archivedAt,
-    isAssigned,
-    members: project.members.map((member) => ({ id: member.user.id, name: member.user.name }))
-  };
+  const ctx = buildProjectAccessContext(project, currentUser);
+  return serializeProjectDetail(project, ctx);
 });

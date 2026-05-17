@@ -3,6 +3,7 @@ import { useProject, useProjectId, useProjectMembers } from "~/entities/project"
 import { useProjectChat } from "~/features/project-chat";
 import { useProjectImages } from "~/features/project-images";
 import { useProjectLinks } from "~/features/project-links";
+import { useProjectReferenceBlocks } from "~/features/project-reference-blocks";
 import { useProjectTasks } from "~/features/project-tasks";
 import { ProjectDetailsPage } from "~/widgets/project-details";
 import { useCurrentUser } from "~/shared/api";
@@ -13,6 +14,10 @@ const projectId = useProjectId();
 const activeTab = ref<"overview" | "kanban" | "chat">("overview");
 
 const { project, error, showEdit, editForm, loadProject, saveProject, archiveProject } = useProject(projectId);
+
+useHead({
+  title: () => project.value?.title || "Проект"
+});
 const {
   showMembersModal,
   loadUsers,
@@ -54,6 +59,17 @@ const {
 
 const { links, newUrl, linkError, adding, loadLinks, addLink, deleteLink } = useProjectLinks(projectId);
 
+const {
+  blocks: referenceBlocks,
+  loading: referenceBlocksLoading,
+  error: referenceBlocksError,
+  newBlock: referenceNewBlock,
+  loadBlocks,
+  createBlock,
+  updateBlock,
+  deleteBlock
+} = useProjectReferenceBlocks(projectId);
+
 const onAddClient = async (clientId: number) => {
   await addClientToProject(clientId);
   await loadProject();
@@ -83,6 +99,7 @@ if (canUseChat.value) {
 onMounted(async () => {
   if (isDeveloper.value) {
     await loadUsers();
+    await loadBlocks();
   }
   if (canUseChat.value) {
     subscribe();
@@ -124,6 +141,11 @@ onBeforeUnmount(unsubscribe);
     :messages="messages"
     :current-user-id="currentUserId"
     :new-message="newMessage"
+    :reference-blocks="referenceBlocks"
+    :reference-blocks-loading="referenceBlocksLoading"
+    :reference-blocks-error="referenceBlocksError"
+    :reference-new-title="referenceNewBlock.title"
+    :reference-new-content="referenceNewBlock.content"
     @set-tab="activeTab = $event"
     @toggle-edit="showEdit = !showEdit"
     @open-members="onOpenMembers"
@@ -148,5 +170,10 @@ onBeforeUnmount(unsubscribe);
     @remove-task="removeTask"
     @update:new-message="newMessage = $event"
     @send-message="sendMessage"
+    @create-reference-block="createBlock"
+    @save-reference-block="updateBlock"
+    @delete-reference-block="deleteBlock"
+    @update:reference-new-title="referenceNewBlock.title = $event"
+    @update:reference-new-content="referenceNewBlock.content = $event"
   />
 </template>

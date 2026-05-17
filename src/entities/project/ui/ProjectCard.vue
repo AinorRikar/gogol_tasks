@@ -17,7 +17,10 @@ const statusLabels: Record<ProjectListItem["status"], string> = {
     <div class="mb-3 flex items-start justify-between gap-3">
       <div>
         <h3 class="text-base font-semibold">{{ project.title }}</h3>
-        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ statusLabels[project.status] }}</p>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+          {{ statusLabels[project.status] }}
+          <span v-if="project.version" class="text-zinc-400"> · v{{ project.version }}</span>
+        </p>
       </div>
       <div class="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
         <span
@@ -42,7 +45,7 @@ const statusLabels: Record<ProjectListItem["status"], string> = {
     </div>
     <p v-if="project.archivedAt" class="mb-2 text-xs text-amber-600 dark:text-amber-400">Архивирован</p>
     <p class="mb-4 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-      {{ project.description || "Описание скрыто для приватного проекта." }}
+      {{ project.shortDescription || "Описание скрыто для приватного проекта." }}
     </p>
     <div class="mt-auto">
       <NuxtLink

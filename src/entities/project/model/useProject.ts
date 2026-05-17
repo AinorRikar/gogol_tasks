@@ -8,7 +8,9 @@ export const useProject = (projectId: Ref<number>) => {
 
   const editForm = reactive({
     title: "",
-    description: "",
+    shortDescription: "",
+    fullDescription: "",
+    version: "",
     status: "PLANNING" as ProjectListItem["status"],
     visibility: true,
     hidden: false,
@@ -18,7 +20,9 @@ export const useProject = (projectId: Ref<number>) => {
 
   const hydrateEditForm = (value: ProjectListItem) => {
     editForm.title = value.title;
-    editForm.description = value.description ?? "";
+    editForm.shortDescription = value.shortDescription ?? "";
+    editForm.fullDescription = value.fullDescription ?? "";
+    editForm.version = value.version ?? "";
     editForm.status = value.status;
     editForm.visibility = value.visibility;
     editForm.hidden = value.hidden;
@@ -61,4 +65,3 @@ export const useProject = (projectId: Ref<number>) => {
     archiveProject
   };
 };
-
