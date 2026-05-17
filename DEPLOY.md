@@ -72,6 +72,8 @@ CORS_ORIGIN=https://ваш-публичный-хост
 | `INTEGRATION_SECRET` | Секрет для `/api/integration/*` (см. [API.md](API.md)) |
 | `NUXT_PUBLIC_APP_BASEURL` | В compose: `/dashboard/` (должен совпадать с build-arg в Dockerfile) |
 | `CORS_ORIGIN` | Разрешённый origin для `/api/**` (если API вызывают с другого домена) |
+| `UPLOADS_DIR` | Каталог загрузок в контейнере (`/data/uploads`, том `gogol-uploads`) |
+| `PUBLIC_APP_ORIGIN` | Публичный `http(s)://хост` для абсолютных URL картинок в API (без пути) |
 
 ## Первый деплой
 
@@ -128,6 +130,30 @@ docker exec gogol-dashboard npx prisma db push
 ```
 
 **Внимание:** без бэкапа тома `gogol-sqlite-data` удаление `prod.db` уничтожит данные.
+
+## Картинки не отображаются (видно только имя файла)
+
+1. **Образ после коммита с `server/routes/uploads` и томом `gogol-uploads`** — в `.env` должны быть актуальные `docker-compose.yml` (том `gogol-uploads`, `UPLOADS_DIR=/data/uploads`). Пересоберите: `docker compose build --no-cache && docker compose up -d --force-recreate`.
+
+2. **Файлы не переносятся с локальной машины** — в БД есть `fileUrl`, но сами файлы лежали в локальном `public/uploads`. На сервере их нужно **загрузить заново** через галерею или скопировать в том:
+   ```bash
+   docker cp ./uploads/. gogol-dashboard:/data/uploads/
+   ```
+
+3. **`PUBLIC_APP_ORIGIN` для Integration API** — если внешний сайт запрашивает API по внутреннему имени Docker (`http://gogol-dashboard:3000/...`), в ответе будут битые ссылки вида `http://gogol-dashboard:3000/dashboard/uploads/...`. В `.env` дашборда задайте:
+   ```env
+   PUBLIC_APP_ORIGIN=http://ВАШ_ПУБЛИЧНЫЙ_IP
+   ```
+   (без `/dashboard` в конце; путь добавится автоматически).
+
+4. **Проверка отдачи файла** (подставьте реальное имя из БД):
+   ```bash
+   curl -sI "http://127.0.0.1/dashboard/uploads/projects/ИМЯ_ФАЙЛА.jpg"
+   ```
+   Ожидается `HTTP/1.1 200` и `Content-Type: image/...`. Из контейнера nginx:
+   ```bash
+   docker exec <edge-nginx> wget -qSO- --timeout=3 "http://gogol-dashboard:3000/dashboard/uploads/projects/ИМЯ_ФАЙЛА.jpg" 2>&1 | head
+   ```
 
 ## 502 Bad Gateway на `/dashboard/`
 

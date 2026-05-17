@@ -5,6 +5,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
+import { toPublicAssetUrl } from "../../../../utils/assetUrl";
 import { getProjectUploadsDir } from "../../../../utils/uploads";
 import { UserRole } from "@prisma/client";
 import { createError, getRouterParam, readMultipartFormData } from "h3";
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
   const diskPath = join(uploadsDir, safeName);
   await writeFile(diskPath, filePart.data);
 
-  return prisma.projectImage.create({
+  const image = await prisma.projectImage.create({
     data: {
       projectId,
       uploadedById: currentUser.id,
@@ -53,4 +54,9 @@ export default defineEventHandler(async (event) => {
       }
     }
   });
+
+  return {
+    ...image,
+    fileUrl: toPublicAssetUrl(event, image.fileUrl)
+  };
 });
