@@ -6,6 +6,7 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { UserRole } from "@prisma/client";
 import { createError, getRouterParam } from "h3";
+import { getUploadsRoot } from "../../../../utils/uploads";
 import { getCurrentUser } from "../../../../utils/auth";
 import { getProjectWithMembers } from "../../../../utils/project";
 import { prisma } from "../../../../utils/prisma";
@@ -26,7 +27,8 @@ export default defineEventHandler(async (event) => {
   }
 
   await prisma.projectImage.delete({ where: { id: imageId } });
-  const diskPath = join(process.cwd(), "public", image.fileUrl.replace(/^\//, ""));
+  const subPath = image.fileUrl.replace(/^\/uploads\//, "");
+  const diskPath = join(getUploadsRoot(), subPath);
   try {
     await unlink(diskPath);
   } catch {

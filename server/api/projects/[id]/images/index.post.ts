@@ -5,6 +5,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
+import { getProjectUploadsDir } from "../../../../utils/uploads";
 import { UserRole } from "@prisma/client";
 import { createError, getRouterParam, readMultipartFormData } from "h3";
 import { getCurrentUser } from "../../../../utils/auth";
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Only image files are allowed" });
   }
 
-  const uploadsDir = join(process.cwd(), "public", "uploads", "projects");
+  const uploadsDir = getProjectUploadsDir();
   await mkdir(uploadsDir, { recursive: true });
 
   const ext = extname(filePart.filename) || ".jpg";

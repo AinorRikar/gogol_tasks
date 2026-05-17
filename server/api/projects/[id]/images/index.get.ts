@@ -4,6 +4,7 @@
  * Ответ: ProjectImage[] с uploadedBy.
  */
 import { createError, getRouterParam } from "h3";
+import { toPublicAssetUrl } from "../../../../utils/assetUrl";
 import { getCurrentUserOptional } from "../../../../utils/auth";
 import { canAccessProject, getProjectWithMembers } from "../../../../utils/project";
 import { prisma } from "../../../../utils/prisma";
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: "No access to project gallery" });
   }
 
-  return prisma.projectImage.findMany({
+  const images = await prisma.projectImage.findMany({
     where: { projectId },
     include: {
       uploadedBy: {
@@ -31,4 +32,9 @@ export default defineEventHandler(async (event) => {
     },
     orderBy: { createdAt: "desc" }
   });
+
+  return images.map((image) => ({
+    ...image,
+    fileUrl: toPublicAssetUrl(event, image.fileUrl)
+  }));
 });
