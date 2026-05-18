@@ -1,0 +1,40 @@
+# Сеть web должна существовать: docker network create web
+# Основной сайт и дашборд подключаются к ней (см. DEPLOY.md).
+
+services:
+  gogol-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_APP_BASEURL: /dashboard/
+    image: gogol-dashboard:latest
+    container_name: gogol-dashboard
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      NITRO_HOST: "0.0.0.0"
+      NITRO_PORT: "3000"
+      DATABASE_URL: file:/data/prod.db
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      INTEGRATION_SECRET: ${INTEGRATION_SECRET:-}
+      NUXT_PUBLIC_APP_BASEURL: /dashboard/
+      UPLOADS_DIR: /data/uploads
+      PUBLIC_APP_ORIGIN: ${PUBLIC_APP_ORIGIN:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://127.0.0.1}
+    volumes:
+      - gogol-sqlite-data:/data
+      - gogol-uploads:/data/uploads
+    networks:
+      - web
+
+volumes:
+  gogol-sqlite-data:
+  gogol-uploads:
+
+networks:
+  web:
+    external: true
+    name: web

@@ -1,0 +1,160 @@
+// =============================================================================
+// Схема данных Prisma для приложения (ORM-слой над SQLite).
+//
+// generator — какой клиент генерировать (`prisma generate` → пакет @prisma/client).
+// datasource — подключение к БД: строка DATABASE_URL из .env (у нас file:./dev.db и т.п.).
+//
+// После правок этого файла: `npx prisma generate` (обновить типы/клиент) и
+// `npx prisma db push` (применить изменения к SQLite без отдельных миграций).
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Роль в продукте: разработчик (полный доступ к проектам) или заказчик (ограничения в API).
+enum UserRole {
+  DEVELOPER
+  CLIENT
+}
+
+// Жизненный цикл проекта в CRM (фильтры списка, формы редактирования).
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+  SUPPORTED
+  PLANNING
+}
+
+// Колонки канбана задач.
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+// Пользователь: вход по уникальному login, пароль только в виде hash (см. server/utils/auth.ts).
+model User {
+  id              Int             @id @default(autoincrement())
+  name            String
+  login           String          @unique
+  passwordHash    String          @default("")
+  role            UserRole
+  createdProjects Project[]       @relation("ProjectCreator")
+  memberships     ProjectMember[]
+  sentMessages    ChatMessage[]   @relation("MessageAuthor")
+  tasks           ProjectTask[]   @relation("TaskAssignee")
+  uploadedImages  ProjectImage[]  @relation("ImageUploader")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+// Проект: visibility = виден ли в «публичном» списке без членства;
+// hidden = «скрытый» контент для посторонних (маскировка title/описаний в API);
+// archivedAt != null → проект в архиве;
+// useForPortfolio / techStack — метаданные для портфеля и стека (techStack хранится строкой через запятую).
+model Project {
+  id               Int                    @id @default(autoincrement())
+  title            String
+  shortDescription String
+  fullDescription  String                 @default("")
+  version          String                 @default("")
+  status           ProjectStatus
+  visibility       Boolean                @default(true)
+  hidden           Boolean                @default(false)
+  useForPortfolio  Boolean                @default(false)
+  techStack        String                 @default("")
+  archivedAt       DateTime?
+  members          ProjectMember[]
+  messages         ChatMessage[]
+  tasks            ProjectTask[]
+  images           ProjectImage[]
+  links            ProjectLink[]
+  referenceBlocks  ProjectReferenceBlock[]
+  createdById Int
+  createdBy   User            @relation("ProjectCreator", fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// Связь заказчик ↔ проект (многие-ко-многим через таблицу). Удаление проекта каскадом удаляет строки участников.
+model ProjectMember {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  userId    Int
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+// Сообщения чата проекта. sentAt — опциональное «время отправки» для отображения.
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  authorId  Int
+  text      String
+  sentAt    DateTime?
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User     @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// Задача канбана. При удалении назначенного пользователя assigneeId обнуляется (SetNull), проект при удалении — каскадом удаляет задачи.
+model ProjectTask {
+  id          Int        @id @default(autoincrement())
+  projectId   Int
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  assigneeId  Int?
+  order       Int        @default(0)
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Справочный блок (метрики/аспекты улучшений) — в CRM только для разработчика; в integration API для портфолио.
+model ProjectReferenceBlock {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  title     String
+  content   String
+  order     Int      @default(0)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Внешняя ссылка проекта: url + кэш title/iconUrl с целевого сайта.
+model ProjectLink {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  url       String
+  title     String
+  iconUrl   String
+  order     Int      @default(0)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// Файл изображения в галерее проекта (URL и метаданные после загрузки через API).
+model ProjectImage {
+  id           Int      @id @default(autoincrement())
+  projectId    Int
+  uploadedById Int
+  fileName     String
+  fileUrl      String
+  mimeType     String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation("ImageUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
